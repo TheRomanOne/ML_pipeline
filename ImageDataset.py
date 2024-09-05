@@ -1,6 +1,6 @@
 import os
 import torch
-# from image_utils import crop_to_shape
+from tqdm import tqdm
 from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
@@ -27,7 +27,12 @@ class ImageDataset(Dataset):
         small_shape = (normalized_shape / self.ratio)
         normalized_shape = (int(normalized_shape[0]), int(normalized_shape[1]))
         small_shape = (int(small_shape[0]), int(small_shape[1]))
-        for file_path in self.file_paths:
+
+
+
+        tq = tqdm(self.file_paths)
+        tq.set_description(f"Processing images")
+        for file_path in tq:
             img = Image.open(file_path).convert('RGB')
             img = np.array(img)
             # img = transforms.ToTensor()(img)

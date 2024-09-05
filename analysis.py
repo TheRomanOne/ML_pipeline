@@ -104,7 +104,7 @@ def run_heatmap(latents_np, save_path):
 
 
 def run_full_analysis(latents_np, save_path):
-  print('\n\nFull analysis:')
+  print('\n\nRunning full latent analysis:')
   run_pca(latents_np, save_path)
   run_t_sne(latents_np, save_path)
   run_umap(latents_np, save_path)

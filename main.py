@@ -1,16 +1,11 @@
-from pandas.plotting import scatter_matrix
-from tqdm import tqdm
+import os
 import torch
-from scipy.ndimage import zoom
-import matplotlib.pyplot as plt
 import numpy as np
-from models.VAE import VAE_SR
 from train import train_model
 from analysis import run_full_analysis
 from utils import evaluate_latent_batches
-from session_utils import start_session, load_weights, parse_args
+from session_utils import start_session, load_model_from_params, parse_args
 import image_utils as i_utils
-import os
 
 os.system('clear')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,24 +19,38 @@ if __name__ == '__main__':
   ).config
 
   session = start_session(config)
-  scene_type = session['type']
-  scene_name = session['name']
+  scene_type = session['session_type']
+  scene_name = session['session_name']
   session_path = session['path']
+  
+  params = session['nn_params']
+  dataset = session['dataset']
+  resize_ratio = dataset['resize_ratio']
+  to_horizontal = dataset['is_horizontal']
 
-  to_horizontal = False
-  ds, dl = i_utils.load_image_ds(
-      video_path = session['video_path'],
-      max_size=64*2, # dont change these values
-      ratio=4, # dont change these values,
-      to_horizontal=to_horizontal
-  )
+  if scene_type == 'videos':
+    ds, dl = i_utils.load_video_ds(
+        video_path = session['dataset_path'],
+        id_from = 0,
+        id_to=-1,
+        max_size=64*2, # dont change these values
+        ratio=resize_ratio, # dont change these values,
+        to_horizontal=to_horizontal
+    )
+  elif scene_type == 'images':
+    ds, dl = i_utils.load_image_ds(
+        video_path = session['dataset_path'],
+        max_size=64*2, # dont change these values
+        ratio=resize_ratio, # dont change these values,
+        to_horizontal=to_horizontal
+    )
 
   X_gt = ds.X_gt
   y_gt = ds.y_gt
   
-  params = session['params']
+  
   n_epochs = params['n_epochs']
-  model_type = params['model_type']
+
 
   example_index = 50
   test_image = X_gt[example_index].to(device)
@@ -52,19 +61,8 @@ if __name__ == '__main__':
   i_utils.render_image(test_image.cpu(), f'{session_path}/images', 'X_gt', to_horizontal=to_horizontal)
   i_utils.render_image(test_target.cpu(), f'{session_path}/images', 'y_gt', to_horizontal=to_horizontal)
 
-  if model_type == 'VAE_SR':
-    latent_dim = params['latent_dim']
-    vae_sr = VAE_SR(latent_dim, in_shape=X_gt.shape).to(device)
-    
-    if params['load_weights']:
-      load_weights(vae_sr, session['weights_path'])
-      
-    else:
-      print('Creating a new model')
-
-  else:
-    print(f"Model {model_type} is not supported yet")
-    exit()
+  vae_sr = load_model_from_params(session)
+  vae_sr.to(device)
 
   losses, frames = train_model(
     dl=dl,
@@ -72,12 +70,11 @@ if __name__ == '__main__':
     n_epochs=n_epochs,
     device=device,
     test_image=test_image,
-    lr=1e-3
+    lr=params['learning_rate']
   )
 
   print("Saving weights")
   torch.save(vae_sr.state_dict(), session['weights_path'])
-  i_utils.plot_losses(losses, save_path=f'{session_path}/images')
 
 
   latents_np = evaluate_latent_batches(vae_sr, X_gt, batches=16)
@@ -85,9 +82,12 @@ if __name__ == '__main__':
 
   print("Plotting loss")
   losses = losses.reshape(n_epochs, -1).mean(axis=1)
-  i_utils.plot_interpolation(vae_sr, latents_np, f'{session_path}/videos')
+  i_utils.plot_losses(losses, save_path=f'{session_path}/images')
+  i_utils.plot_interpolation(vae_sr, latents_np, f'{session_path}/images')
 
-  run_full_analysis(latents_np, save_path=f'{session_path}/images')
+  anls = session['analysis']
+  if 'full_laten_analysis' in anls:
+    run_full_analysis(latents_np, save_path=f'{session_path}/images')
 
   i_utils.create_video('learning', frames, save_path=f'{session_path}/videos', to_horizontal=to_horizontal, limit_frames=500)
 

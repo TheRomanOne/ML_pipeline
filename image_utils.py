@@ -219,7 +219,7 @@ def load_image_ds(video_path, max_size, ratio=4, to_horizontal=False):
 
 def plot_losses(losses, save_path):
   plt.figure()
-  plt.plot(losses, marker='o', linestyle='-', color='b', label='Mean Loss')
+  plt.plot(losses, linestyle='-', label='Mean Loss')
   plt.title('Loss')
   plt.xlabel('Epoch')
   plt.ylabel('Mean Loss')

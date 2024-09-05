@@ -2,4 +2,6 @@ __INIT__.py
 __pycache__/
 sessions/
 weights/
+config/*
+!config/default.yaml
 dataset_config.yaml

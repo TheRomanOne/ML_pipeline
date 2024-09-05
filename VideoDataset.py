@@ -1,5 +1,5 @@
-import cv2
-import torch
+import cv2, torch
+from tqdm import tqdm
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 import numpy as np
@@ -17,14 +17,15 @@ class VideoDataset(Dataset):
 
     def _load_video_frames(self):
         # Open the video file
-        print('Loading file:', self.video_path)
         cap = cv2.VideoCapture(self.video_path)
+        print('\n\nLoading video:', self.video_path, '--- success', cap.isOpened())
+        n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         X_gt = []
         y_gt = []
 
-        frame_idx = 0
-        print('Success:', cap.isOpened(), '\n\n')
-        while cap.isOpened():
+        tq = tqdm(range(n_frames))
+        tq.set_description(f"Processing frames")
+        for frame_idx in tq:
             ret, frame = cap.read()
             if not ret:
                 break

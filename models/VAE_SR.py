@@ -52,9 +52,9 @@ class Decoder(nn.Module):
 
         return z
 
-class VAE(nn.Module):
+class VAE_SR(nn.Module):
     def __init__(self, latent_dim):
-        super(VAE, self).__init__()
+        super(VAE_SR, self).__init__()
 
         self.encoder = Encoder(latent_dim)
         self.decoder = Decoder(latent_dim)
@@ -75,6 +75,8 @@ class VAE(nn.Module):
         # recon_x = ((recon_x / 2 + .5))
         return recon_x, mu, logvar
 
-    def from_latent(self, x):
-      return self.decoder(x)
-      
+    def from_latent(self, x, enhance=1):
+      x = self.relu(self.decoder(x))
+      for _ in range(enhance):
+        x = self.sr_2(self.sr_1(x))
+      return x

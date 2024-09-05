@@ -1,5 +1,8 @@
 import os, shutil, torch
 import yaml, argparse
+from models.VAE import VAE
+from models.VAE_SR import VAE_SR
+from models.VAE_SR_landscape import VAE_SR_landscape
 
 with open('dataset_config.yaml', 'r') as yaml_file:
     dataset_config = yaml.safe_load(yaml_file)
@@ -9,8 +12,9 @@ def start_session(config_path):
 
     with open(config_path, 'r') as yaml_file:
         run_config = yaml.safe_load(yaml_file)
-    scene_name = run_config['name']
-    scene_type = run_config['type']
+    dataset= run_config['dataset']
+    scene_name = dataset['name']
+    scene_type = dataset['type']
     print(f'Starting session for {scene_type}:', scene_name)
     if not os.path.isdir('sessions'):
         os.mkdir('sessions')
@@ -32,15 +36,18 @@ def start_session(config_path):
         os.mkdir(f'{w_path}/videos')
     
     weights_path = f"{w_path}/{scene_type}/{scene_name}.pth"
-
-    return {
-        'name': scene_name,
-        'type': scene_type,
+    
+    run_config['nn_params']['learning_rate'] = float(run_config['nn_params']['learning_rate'])
+    run_config.update({
+        'session_name':scene_name,
+        'session_type':scene_type,
         'path': session_path,
         'weights_path': weights_path,
-        'video_path': dataset_config[scene_type][scene_name],
-        'params': run_config['params']
-    }
+        'dataset_path': dataset_config[scene_type][scene_name]
+    })
+
+    return run_config
+    
 
 def load_weights(model, weights_path):
     if os.path.isfile(weights_path):
@@ -53,3 +60,32 @@ def parse_args(default):
     parser = argparse.ArgumentParser(description="Inset name and type")
     parser.add_argument('--config', default=default, type=str, help='Type argument')
     return parser.parse_args()
+
+def load_model_from_params(session):
+    params = session['nn_params']
+    model_type = params['model_type'].lower()
+
+    if model_type == 'vae':
+        latent_dim = params['latent_dim']
+        model = VAE(latent_dim)
+
+    elif model_type == 'vae_sr':
+        latent_dim = params['latent_dim']
+        model = VAE_SR(latent_dim)
+
+    elif model_type == 'vae_sr_landscape':
+        latent_dim = params['latent_dim']
+        model = VAE_SR_landscape(latent_dim)
+
+    else:
+        print(f"Model {model_type} is not supported yet")
+        exit()
+    
+
+    if params['load_weights']:
+        print('Loading weight for:', model_type)
+        load_weights(model, session['weights_path'])
+    else:
+        print('Creating a new model:', model_type)
+    
+    return model
