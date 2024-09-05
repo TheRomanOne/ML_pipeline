@@ -38,7 +38,7 @@ if __name__ == '__main__':
         to_horizontal=to_horizontal
     )
   elif scene_type == 'images':
-    ds, dl = i_utils.load_image_ds(
+    ds, dataloader = i_utils.load_image_ds(
         video_path = session['dataset_path'],
         max_size=64*2, # dont change these values
         ratio=resize_ratio, # dont change these values,
@@ -64,13 +64,13 @@ if __name__ == '__main__':
   vae_sr = load_model_from_params(session)
   vae_sr.to(device)
 
+
   losses, frames = train_model(
-    dl=dl,
-    model=vae_sr,
-    n_epochs=n_epochs,
-    device=device,
+    type=params['train_as'],
+    dataloader=dataloader,
+    vae=vae_sr,
     test_image=test_image,
-    lr=params['learning_rate']
+    params=params
   )
 
   print("Saving weights")

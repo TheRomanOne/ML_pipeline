@@ -7,6 +7,7 @@ dataset:
 nn_params:
   model_type: 'vae_sr'
   load_weights: false
+  train_as: 'vae'
   n_epochs: 400
   latent_dim: 15
   learning_rate: 1e-4
