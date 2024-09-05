@@ -1,20 +1,20 @@
-session_name: 'flowers_testing'
+session_name: 'sdf'
 
 dataset:
-  type: 'images'
-  name: 'flowers'
+  type: 'videos'
+  name: 'clouds'
   is_horizontal: False
   resize_ratio: 1
-  max_size: 128 # same as nn m.size
+  max_size: 128 # powers of 2
 
 nn_params:
-  max_size: 128 # same as dataset m.size
   model_type: 'vae' #resize_ratio > 1
   load_weights: false
   train_as: 'vae'
   n_epochs: 50
-  latent_dim: 50
+  latent_dim: 16
   learning_rate: 1e-3
+  kl_betha: 1.3
 
 analysis:
   - evaluate_and_interpolate

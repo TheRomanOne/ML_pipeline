@@ -1,0 +1,42 @@
+# ______________   LAYER 1  ______________
+
+layers:
+  - function: deconv2d
+    params: 
+      in_channels: -1 # take size from config
+      out_channels: 64
+      kernel_size: 4
+      stride: 2
+      padding: 1
+
+  - function: batchNorm2d
+    params: 
+      size: 64
+
+  - function: relu
+    params: 
+      negative_slope: 0.2
+
+  - function: deconv2d
+    params: 
+      in_channels: 64
+      out_channels: 32
+      kernel_size: 2
+      stride: 1
+      padding: 0
+
+  - function: batchNorm2d
+    params: 
+      size: 32
+
+  - function: relu
+    params: 
+      negative_slope: 0.2
+
+  - function: conv2d
+    params: 
+      in_channels: 32
+      out_channels: 3
+      kernel_size: 2
+      stride: 1
+      padding: 0

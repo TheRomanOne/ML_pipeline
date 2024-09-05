@@ -1,0 +1,43 @@
+layers:
+  # ______________   LAYER 1  ______________
+  - function: conv2d
+    params: 
+      in_channels: 3
+      out_channels: 32
+      kernel_size: 4
+      stride: 2
+      padding: 1
+
+  - function: batchNorm2d
+    params: 
+      size: 32
+
+  - function: relu
+    params: 
+      negative_slope: 0.2
+
+  # ______________   LAYER 2  ______________
+  - function: conv2d
+    params: 
+      in_channels: 32
+      out_channels: 64
+      kernel_size: 4
+      stride: 2
+      padding: 1
+
+  - function: batchNorm2d
+    params: 
+      size: 64
+
+  - function: relu
+    params: 
+      negative_slope: 0.2
+
+  # ______________   LAYER 3  ______________
+  - function: conv2d
+    params: 
+      in_channels: 64
+      out_channels: 128
+      kernel_size: 4
+      stride: 2
+      padding: 1

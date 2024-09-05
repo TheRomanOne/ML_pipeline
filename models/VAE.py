@@ -1,125 +1,9 @@
-import torch
+import torch, yaml
 import torch.nn as nn
 from models.SuperRsolution import SuperResolution
 from utils.utils import conv2d_output_shape, deconv2d_output_shape
 import numpy as np
 
-decoder_architecture = [
-# ______________   LAYER 1  ______________
-            {
-                'function': 'deconv2d',
-                'params': {
-                    'in_channels': -1, # take size from config
-                    'out_channels': 64,
-                    'kernel_size': 4,
-                    'stride': 2,
-                    'padding': 1,
-                }
-            },
-            {
-                'function': 'batchNorm2d',
-                'params': {
-                    'size': 64,
-                }
-            },
-            {
-                'function': 'relu',
-                'params': {'negative_slope': 0.2}
-            },
-
-# ______________   LAYER 2  ______________
-            {
-                'function': 'deconv2d',
-                'params': {
-                    'in_channels': 64,
-                    'out_channels': 32,
-                    'kernel_size': 2,
-                    'stride': 1,
-                    'padding': 0,
-                }
-            },
-            {
-                'function': 'batchNorm2d',
-                'params': {
-                    'size': 32,
-                }
-            },
-            {
-                'function': 'relu',
-                'params': {'negative_slope': 0.2}
-            },
-
-# ______________   LAYER 3  ______________
-            {
-                'function': 'conv2d',
-                'params': {
-                    'in_channels': 32,
-                    'out_channels': 3,
-                    'kernel_size': 2,
-                    'stride': 1,
-                    'padding': 0,
-                }
-            }
-        ]
-  
-
-encoder_architecture = [
-# ______________   LAYER 1  ______________
-            {
-                'function': 'conv2d',
-                'params': {
-                    'in_channels': 3,
-                    'out_channels': 32,
-                    'kernel_size': 4,
-                    'stride': 2,
-                    'padding': 1,
-                }
-            },
-            {
-                'function': 'batchNorm2d',
-                'params': {
-                    'size': 32,
-                }
-            },
-            {
-                'function': 'relu',
-                'params': {'negative_slope': 0.2}
-            },
-
-# ______________   LAYER 2  ______________
-            {
-                'function': 'conv2d',
-                'params': {
-                    'in_channels': 32,
-                    'out_channels': 64,
-                    'kernel_size': 4,
-                    'stride': 2,
-                    'padding': 1,
-                }
-            },
-            {
-                'function': 'batchNorm2d',
-                'params': {
-                    'size': 64,
-                }
-            },
-            {
-                'function': 'relu',
-                'params': {'negative_slope': 0.2}
-            },
-
-# ______________   LAYER 3  ______________
-            {
-                'function': 'conv2d',
-                'params': {
-                    'in_channels': 64,
-                    'out_channels': 128,
-                    'kernel_size': 4,
-                    'stride': 2,
-                    'padding': 1,
-                }
-            }
-        ]
 
 
 
@@ -152,7 +36,7 @@ def parse_architecture(input_shape, architecture):
 
             # TODO: remove hack
             in_channels = a_params['in_channels'] if a_params['in_channels'] > 0 else np.max(input_shape) * 2
-            
+
             action = nn.ConvTranspose2d(
                 in_channels=in_channels,
                 out_channels=a_params['out_channels'],
@@ -210,15 +94,8 @@ class Decoder(nn.Module):
         self.seq = seq
         self.layer_shapes = layer_shapes
         self.deconvolutions = nn.Sequential(*seq)
-        # self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1)
-        # self.batch_norm1 = nn.BatchNorm2d(64)
 
-        # self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=2, stride=1, padding=1)
-        # self.batch_norm2 = nn.BatchNorm2d(32)
-
-        # self.deconv3 = nn.ConvTranspose2d(32, 3, kernel_size=2, stride=1, padding=0)
         self.sigmoid = nn.Sigmoid()
-        self.relu = nn.LeakyReLU(negative_slope=0.2)
 
     def forward(self, z):
         z = self.fc(z)
@@ -233,8 +110,14 @@ class VAE(nn.Module):
     def __init__(self, params, input_shape):
         super(VAE, self).__init__()
 
-        self.encoder = Encoder(latent_dim=params['latent_dim'], input_shape=input_shape, architecture=encoder_architecture)
-        self.decoder = Decoder(latent_dim=params['latent_dim'], input_shape=input_shape, init_size=params['max_size'], architecture=decoder_architecture)
+        with open('models/config/encoder.yaml', 'r') as yaml_file:
+            encoder_architecture = yaml.safe_load(yaml_file)
+
+        with open('models/config/decoder.yaml', 'r') as yaml_file:
+            decoder_architecture = yaml.safe_load(yaml_file)
+
+        self.encoder = Encoder(latent_dim=params['latent_dim'], input_shape=input_shape, architecture=encoder_architecture['layers'])
+        self.decoder = Decoder(latent_dim=params['latent_dim'], input_shape=input_shape, init_size=params['max_size'], architecture=decoder_architecture['layers'])
         self.sr_1 = SuperResolution()
         self.sr_2 = SuperResolution()
         self.relu = nn.LeakyReLU(negative_slope=0.2)

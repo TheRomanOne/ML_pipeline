@@ -38,6 +38,7 @@ def start_session(config_path):
     weights_path = f"{w_path}/{session_name}.pth"
     
     run_config['nn_params']['learning_rate'] = float(run_config['nn_params']['learning_rate'])
+    run_config['nn_params']['max_size'] = run_config['dataset']['max_size']
     run_config.update({
         'path': session_path,
         'weights_path': weights_path,
