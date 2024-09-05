@@ -12,7 +12,7 @@ from sklearn.manifold import TSNE
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def run_pca(latents_np, save_path):
-  print('Running pca')
+  print('\t --- pca')
   pca = PCA(n_components=2)
   latent_2d = pca.fit_transform(latents_np)
 
@@ -45,7 +45,7 @@ def run_pca(latents_np, save_path):
 
 
 def run_t_sne(latents_np, save_path):
-  print('Running t_sne')
+  print('\t --- t_sne')
   tsne = TSNE(n_components=2, random_state=42)
   latent_2d_tsne = tsne.fit_transform(latents_np)
 
@@ -59,7 +59,7 @@ def run_t_sne(latents_np, save_path):
   plt.close()
 
 def run_umap(latents_np, save_path):
-  print('Running umap')
+  print('\t --- umap')
   lle = LocallyLinearEmbedding(n_components=2, n_neighbors=10)
   latent_2d_lle = lle.fit_transform(latents_np)
 
@@ -73,7 +73,7 @@ def run_umap(latents_np, save_path):
   plt.close()
 
 def run_isomap(latents_np, save_path):
-  print('Running isomap')
+  print('\t --- isomap')
   isomap = Isomap(n_components=2, n_neighbors=10)
   latent_2d_isomap = isomap.fit_transform(latents_np)
 
@@ -87,7 +87,7 @@ def run_isomap(latents_np, save_path):
   plt.close()
 
 def run_scatter(latents_np, save_path):
-  print('Running scatter')
+  print('\t --- scatter')
   df = pd.DataFrame(latents_np)
   scatter_matrix(df, c=range(latents_np.shape[0]), cmap='tab10', alpha=0.2)
   plt.savefig(f'{save_path}/scatter.png', bbox_inches='tight', pad_inches=0)
@@ -95,7 +95,7 @@ def run_scatter(latents_np, save_path):
   plt.close()
 
 def run_heatmap(latents_np, save_path):
-  print('Running heatmap')
+  print('\t --- heatmap')
   df = pd.DataFrame(latents_np)
   sns.heatmap(df.corr(), cmap='coolwarm')
   plt.title('Heatmap of Latent Space')
@@ -105,7 +105,7 @@ def run_heatmap(latents_np, save_path):
 
 
 def run_full_analysis(latents_np, save_path):
-  print('\n\nRunning full latent analysis:')
+  print('Running full latent analysis:')
   run_pca(latents_np, save_path)
   run_t_sne(latents_np, save_path)
   run_umap(latents_np, save_path)
