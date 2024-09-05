@@ -6,9 +6,9 @@ import torch
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def train_model(type, dataloader, vae, test_image, params):
+def train_model(dataloader, vae, test_image, params):
   # train Variational Auto Encode
-  if type == 'vae':
+  if params['train_as'] == 'vae':
     result = train_vae(
       dataloader=dataloader,
       model=vae,

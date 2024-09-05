@@ -1,18 +1,19 @@
 session_name: 'clouds_testing'
 
 dataset:
-  type: 'images'
-  name: 'flowers'
+  type: 'videos'
+  name: 'clouds'
   is_horizontal: false
   resize_ratio: 4
+  max_size: 128
 
 nn_params:
-  model_type: 'vae_sr'
+  model_type: 'vae_sr_landscape'
   load_weights: false
   train_as: 'vae'
-  n_epochs: 10
+  n_epochs: 3
   latent_dim: 15
-  learning_rate: 1e-4
+  learning_rate: 1e-3
 
 analysis:
   full_latent_analysis
