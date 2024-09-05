@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from VideoDataset import VideoDataset
 from ImageDataset import ImageDataset
 import numpy as np
-from utils import rotate_2d_tensor, get_random_direction, evaluate_model_batches
+from utils.utils import rotate_2d_tensor, get_random_direction, evaluate_model_batches
 from torchvision.utils import make_grid
 import torchvision.transforms as transforms
 from torchvision.transforms import Resize
@@ -147,7 +147,7 @@ def interpolate_images(net, images, steps, save_path, to_horizontal=False, sharp
       alpha = i / (steps - 1)
       z = img_z * alpha + prev_z * (1 - alpha)
       z = torch.tensor(z).to(device)
-      net_img = net.from_latent(z, enhance=1).cpu().detach().squeeze().numpy()
+      net_img = net.from_latent(z).cpu().detach().squeeze().numpy()
       if sharpen:
         net_img = sharpen_image(net_img)
       inter.append(net_img)

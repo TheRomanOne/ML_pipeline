@@ -18,10 +18,10 @@ def start_session(config_path):
     scene_name = dataset['name']
     scene_type = dataset['type']
     print(f'Starting session for {scene_type}:', session_name)
-    if not os.path.isdir('sessions'):
-        os.mkdir('sessions')
+    if not os.path.isdir('../sessions'):
+        os.mkdir('../sessions')
 
-    session_path = f'sessions/{session_name}'
+    session_path = f'../sessions/{session_name}'
 
 
     if os.path.isdir(session_path):
@@ -31,13 +31,11 @@ def start_session(config_path):
     os.mkdir(f'{session_path}/videos')
     os.mkdir(f'{session_path}/images')
 
-    w_path = 'weights'
+    w_path = '../weights'
     if not os.path.isdir(w_path):
         os.mkdir(w_path)
-        os.mkdir(f'{w_path}/images')
-        os.mkdir(f'{w_path}/videos')
     
-    weights_path = f"{w_path}/{scene_type}/{session_name}.pth"
+    weights_path = f"{w_path}/{session_name}.pth"
     
     run_config['nn_params']['learning_rate'] = float(run_config['nn_params']['learning_rate'])
     run_config.update({
@@ -65,8 +63,7 @@ def load_model_from_params(session):
     model_type = params['model_type'].lower()
 
     if model_type == 'vae':
-        latent_dim = params['latent_dim']
-        model = VAE(latent_dim)
+        model = VAE(params, session['input_shape'])
 
     elif model_type == 'vae_sr':
         latent_dim = params['latent_dim']

@@ -2,9 +2,9 @@ import os
 import torch
 from train import train_model
 from analysis import run_full_analysis, eval_and_interp
-from utils import evaluate_latent_batches
-from session_utils import start_session, load_model_from_params, parse_args
-import image_utils as i_utils
+from utils.utils import evaluate_latent_batches
+from utils.session_utils import start_session, load_model_from_params, parse_args
+import utils.image_utils as i_utils
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
 
   # ---------------------- Create and train model  ---------------------
-
+  session.update({'input_shape': X_gt.shape[2:]})
   vae_sr = load_model_from_params(session)
   vae_sr.to(device)
 

@@ -1,7 +1,7 @@
 import torch
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-import image_utils as i_utils
+import utils.image_utils as i_utils
 import numpy as np
 import seaborn as sns
 import pandas as pd

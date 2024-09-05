@@ -1,18 +1,19 @@
-session_name: 'clouds_testing'
+session_name: 'croud_testing'
 
 dataset:
   type: 'videos'
-  name: 'clouds'
-  is_horizontal: false
-  resize_ratio: 4
-  max_size: 128
+  name: 'croud'
+  is_horizontal: False
+  resize_ratio: 1
+  max_size: 256 # same as nn m.size
 
 nn_params:
-  model_type: 'vae_sr_landscape'
+  max_size: 256 # same as dataset m.size
+  model_type: 'vae' #resize_ratio > 1
   load_weights: false
   train_as: 'vae'
-  n_epochs: 3
-  latent_dim: 15
+  n_epochs: 50
+  latent_dim: 50
   learning_rate: 1e-3
 
 analysis:
