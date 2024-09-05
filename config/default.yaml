@@ -16,5 +16,5 @@ nn_params:
   learning_rate: 1e-3
 
 analysis:
-  - full_latent_analysis
   - evaluate_and_interpolate
+  - full_latent_analysis

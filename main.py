@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
 
   # ---------------------- Create and train model  ---------------------
-  
+
   vae_sr = load_model_from_params(session)
   vae_sr.to(device)
 
@@ -96,17 +96,17 @@ if __name__ == '__main__':
 
 
   # --------------------------- Run analysis --------------------------- 
-  
+
   if len(session['analysis']) == 0:
     print('No analysis was specified')
     exit()
 
+  if 'evaluate_and_interpolate':
+    eval_and_interp(vae_sr, X_gt, y_gt, to_horizontal, session_path)
+  
   if 'full_latent_analysis' in session['analysis']:
     latents_np = evaluate_latent_batches(vae_sr, X_gt, batches=16)
     i_utils.plot_interpolation(vae_sr, latents_np, f'{session_path}/images')
     run_full_analysis(latents_np, save_path=f'{session_path}/images')
 
-  if 'evaluate_and_interpolate':
-    eval_and_interp(vae_sr, X_gt, y_gt, to_horizontal, session_path)
-  
 
