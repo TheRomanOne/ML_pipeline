@@ -1,6 +1,0 @@
-name: 'dogs'
-type: 'images'
-params:
-  model_type: 'x'
-  n_epochs: 3
-  latent_dim: 15

@@ -5,11 +5,13 @@ with open('dataset_config.yaml', 'r') as yaml_file:
     dataset_config = yaml.safe_load(yaml_file)
 
 def start_session(config_path):
+    print('Loading config:', config_path)
+
     with open(config_path, 'r') as yaml_file:
         run_config = yaml.safe_load(yaml_file)
     scene_name = run_config['name']
     scene_type = run_config['type']
-    print('Starting session', scene_type, scene_name)
+    print(f'Starting session for {scene_type}:', scene_name)
     if not os.path.isdir('sessions'):
         os.mkdir('sessions')
 
@@ -42,6 +44,7 @@ def start_session(config_path):
 
 def load_weights(model, weights_path):
     if os.path.isfile(weights_path):
+        print('Loading checkout')
         model.load_state_dict(torch.load(weights_path))
     else:
         print('No model checkout found')

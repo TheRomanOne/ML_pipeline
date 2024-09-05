@@ -20,7 +20,7 @@ print('\n\nDevice:', device, '\n\n')
 
 if __name__ == '__main__':
   config = parse_args(
-    default='run_config.yaml'
+    default='config/default.yaml'
   ).config
 
   session = start_session(config)
@@ -55,11 +55,17 @@ if __name__ == '__main__':
   if model_type == 'VAE_SR':
     latent_dim = params['latent_dim']
     vae_sr = VAE_SR(latent_dim, in_shape=X_gt.shape).to(device)
-    load_weights(vae_sr, session['weights_path'])
+    
+    if params['load_weights']:
+      load_weights(vae_sr, session['weights_path'])
+      
+    else:
+      print('Creating a new model')
+
   else:
     print(f"Model {model_type} is not supported yet")
     exit()
-    
+
   losses, frames = train_model(
     dl=dl,
     model=vae_sr,
@@ -100,10 +106,10 @@ if __name__ == '__main__':
   sampled_indices = np.random.choice(s, 20, replace=False)
   sampled_indices = np.sort(sampled_indices)
   _imgs = X_gt[-s:][sampled_indices]
-  i_utils.interpolate_images(vae_sr, _imgs, steps=5, save_path=f'{session_path}/images', to_horizontal=to_horizontal, sharpen=True)
+  i_utils.interpolate_images(vae_sr, _imgs, steps=5, save_path=f'{session_path}/videos', to_horizontal=to_horizontal, sharpen=True)
 
   index = torch.randint(0, X_gt.size(0), (1,)).item()
-  print('image index', index)
+  print('image index:', index)
 
   i_utils.random_walk_image(
       img=X_gt[index],

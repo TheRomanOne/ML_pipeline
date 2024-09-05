@@ -1,0 +1,7 @@
+name: 'bikes'
+type: 'images'
+params:
+  model_type: 'VAE_SR'
+  load_weights: false
+  n_epochs: 3
+  latent_dim: 15

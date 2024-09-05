@@ -149,7 +149,7 @@ def interpolate_images(net, images, steps, save_path, to_horizontal=False, sharp
         net_img = sharpen_image(net_img)
       inter.append(net_img)
     prev_z = img_z
-  return create_video('interpolation', inter, save_path, to_horizontal=to_horizontal)
+  return create_video('image_interpolation', inter, save_path, to_horizontal=to_horizontal)
 
 def create_video(name, frames, save_path, transform=True, to_horizontal=False, limit_frames=-1):
   frames = np.array(frames)
