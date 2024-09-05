@@ -18,7 +18,7 @@ def train_model(type, dataloader, vae, test_image, params):
     )
   return result
 
-def train_vae(dataloader, model, n_epochs, test_image=None, lr=1e-3):
+def train_vae(dataloader, model, n_epochs, test_image=None, lr=1e-3) -> tuple:
   print("\n\nTraining type: Variational Auto-Encoder")
   opt = Adam(model.parameters(), lr=lr)
   # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=300, gamma=0.01)

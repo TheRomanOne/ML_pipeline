@@ -4,6 +4,7 @@ from models.VAE import VAE
 from models.VAE_SR import VAE_SR
 from models.VAE_SR_landscape import VAE_SR_landscape
 
+
 with open('dataset_config.yaml', 'r') as yaml_file:
     dataset_config = yaml.safe_load(yaml_file)
 
@@ -12,14 +13,15 @@ def start_session(config_path):
 
     with open(config_path, 'r') as yaml_file:
         run_config = yaml.safe_load(yaml_file)
+    session_name= run_config['session_name']
     dataset= run_config['dataset']
     scene_name = dataset['name']
     scene_type = dataset['type']
-    print(f'Starting session for {scene_type}:', scene_name)
+    print(f'Starting session for {scene_type}:', session_name)
     if not os.path.isdir('sessions'):
         os.mkdir('sessions')
 
-    session_path = f'sessions/{scene_name}'
+    session_path = f'sessions/{session_name}'
 
 
     if os.path.isdir(session_path):
@@ -35,12 +37,10 @@ def start_session(config_path):
         os.mkdir(f'{w_path}/images')
         os.mkdir(f'{w_path}/videos')
     
-    weights_path = f"{w_path}/{scene_type}/{scene_name}.pth"
+    weights_path = f"{w_path}/{scene_type}/{session_name}.pth"
     
     run_config['nn_params']['learning_rate'] = float(run_config['nn_params']['learning_rate'])
     run_config.update({
-        'session_name':scene_name,
-        'session_type':scene_type,
         'path': session_path,
         'weights_path': weights_path,
         'dataset_path': dataset_config[scene_type][scene_name]
@@ -48,7 +48,6 @@ def start_session(config_path):
 
     return run_config
     
-
 def load_weights(model, weights_path):
     if os.path.isfile(weights_path):
         print('Loading checkout')
@@ -89,3 +88,4 @@ def load_model_from_params(session):
         print('Creating a new model:', model_type)
     
     return model
+

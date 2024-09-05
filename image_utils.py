@@ -38,11 +38,12 @@ def render_image(img, save_path, title='', to_horizontal=False):
   plt.close()
 
 def random_walk_image(img, net, angle, steps, change_prob, to_horizontal, save_path):
+  print('random walk interpolation')
   _, mu, lv = net(img.to(device).unsqueeze(0))
   mu = mu.cpu()
   dir = get_random_direction(lv).cpu().detach().squeeze()
   new_frames = []
-  print('Direction', dir)
+  
   row_indices = np.array([0, 1])
   for i in range(steps):
     if np.random.rand() > change_prob:
@@ -104,7 +105,7 @@ def resize_image(image, size):
     image = resize(image)  # Resize image
     return transforms.ToTensor()(image)  # Convert back to tensor
 
-def sample_images(n, net, images, labels, title, save_path, to_horizontal=False):
+def evaluate_images(n, net, images, labels, title, save_path, to_horizontal=False):
     print(f'Sampling {n} images')
     x_recon = evaluate_model_batches(net, images, batches=16)
     
@@ -129,6 +130,8 @@ def sample_images(n, net, images, labels, title, save_path, to_horizontal=False)
     plt.title(title)
     plt.savefig(f'{save_path}/samples.png', bbox_inches='tight', pad_inches=0)
     plt.close()
+
+    return indices
 
 def interpolate_images(net, images, steps, save_path, to_horizontal=False, sharpen=False):
   y_prev, mu_prev, log_var_prev = net(images[0].to(device).unsqueeze(0))
@@ -164,7 +167,6 @@ def create_video(name, frames, save_path, transform=True, to_horizontal=False, l
   # if sharpen:
   #   frames = sharpen_image(frames)
   # frames = ((frames / 2 + .5))
-  print('Video shape:', np.array(frames).shape)
   fig = plt.figure()
   plt.axis('off')
   im = plt.imshow(frames[0])
@@ -217,7 +219,9 @@ def load_image_ds(video_path, max_size, ratio=4, to_horizontal=False):
 
   return image_dataset, image_loader
 
-def plot_losses(losses, save_path):
+def plot_losses(losses, n_epochs, save_path):
+  print("Plotting loss")
+  losses = losses.reshape(n_epochs, -1).mean(axis=1)
   plt.figure()
   plt.plot(losses, linestyle='-', label='Mean Loss')
   plt.title('Loss')

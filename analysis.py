@@ -1,6 +1,7 @@
 import torch
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import image_utils as i_utils
 import numpy as np
 import seaborn as sns
 import pandas as pd
@@ -111,3 +112,36 @@ def run_full_analysis(latents_np, save_path):
   run_isomap(latents_np, save_path)
   run_scatter(latents_np, save_path)
   run_heatmap(latents_np, save_path)
+
+def eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path):
+  print('evaluating 2 images')
+  indices = i_utils.evaluate_images(
+      n=2,
+      net=model,
+      images=X_gt,
+      labels=y_gt,
+      title='samples',
+      to_horizontal=to_horizontal,
+      save_path=f'{session_path}/images'
+  )
+
+
+  print('interpolating 2 images')
+  s = X_gt.shape[0]
+  # sampled_indices = np.random.choice(s, 20, replace=False)
+  sampled_indices = indices
+  sampled_indices = np.sort(sampled_indices)
+  _imgs = X_gt[-s:][sampled_indices]
+  i_utils.interpolate_images(model, _imgs, steps=5, save_path=f'{session_path}/videos', to_horizontal=to_horizontal, sharpen=True)
+
+
+  index = torch.randint(0, X_gt.size(0), (1,)).item()
+  i_utils.random_walk_image(
+      img=X_gt[index],
+      net=model,
+      angle=25,
+      steps=200,
+      change_prob=.95,
+      to_horizontal=to_horizontal,
+      save_path=f'{session_path}/videos'
+  )

@@ -1,6 +1,8 @@
+session_name: 'clouds_testing'
+
 dataset:
-  name: 'flowers'
   type: 'images'
+  name: 'flowers'
   is_horizontal: false
   resize_ratio: 4
 
@@ -8,7 +10,7 @@ nn_params:
   model_type: 'vae_sr'
   load_weights: false
   train_as: 'vae'
-  n_epochs: 400
+  n_epochs: 10
   latent_dim: 15
   learning_rate: 1e-4
 

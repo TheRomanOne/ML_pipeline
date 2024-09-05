@@ -62,4 +62,3 @@ def deconv2d_output_shape(input_size, kernel_size, stride, padding, output_paddi
     # Calculate output height/width for ConvTranspose2d (Deconv)
     return (np.array(input_size) - 1) * stride - 2 * padding + kernel_size + output_padding
 
-print('')

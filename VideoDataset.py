@@ -18,7 +18,7 @@ class VideoDataset(Dataset):
     def _load_video_frames(self):
         # Open the video file
         cap = cv2.VideoCapture(self.video_path)
-        print('\n\nLoading video:', self.video_path, '--- success', cap.isOpened())
+        print('\n\nLoading video:', self.video_path, '---->', 'success' if cap.isOpened() else 'fail')
         n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         X_gt = []
         y_gt = []
