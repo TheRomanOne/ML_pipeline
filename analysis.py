@@ -1,7 +1,7 @@
 import torch
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-import utils.image_utils as i_utils
+import utils.vision_utils as i_utils
 import numpy as np
 import seaborn as sns
 import pandas as pd
@@ -139,9 +139,9 @@ def eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path):
   i_utils.random_walk_image(
       img=X_gt[index],
       net=model,
-      angle=25,
+      angle=35,
       steps=200,
-      change_prob=.95,
+      change_prob=.9,
       to_horizontal=to_horizontal,
       save_path=f'{session_path}/videos'
   )

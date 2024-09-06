@@ -1,10 +1,6 @@
-import torch, cv2
-from torch.utils.data import DataLoader
-from IPython.display import HTML
+import torch
 from matplotlib import animation
 import matplotlib.pyplot as plt
-from VideoDataset import VideoDataset
-from ImageDataset import ImageDataset
 import numpy as np
 from utils.utils import rotate_2d_tensor, get_random_direction, evaluate_model_batches
 from torchvision.utils import make_grid
@@ -24,7 +20,10 @@ def sharpen_image(img):
 
 def render_image(img, save_path, title='', to_horizontal=False):
   # img = ((img / 2 + .5))
-  size = img.shape[1:]
+  # size = img.shape[1:]
+  # if torch.mean(img) > 10:
+  #   img = img / 255
+
   img = np.transpose(img,  (1, 2, 0))
   if to_horizontal:
     img = torch.rot90(img.unsqueeze(0), k=3, dims=[1, 2]).squeeze()
@@ -51,7 +50,7 @@ def random_walk_image(img, net, angle, steps, change_prob, to_horizontal, save_p
       row_indices[[1, 0]] = row_indices
       row_indices[1] = torch.randint(0, dir.size(0), (1,)).item()
     n_dir = rotate_2d_tensor(dir, row_indices, torch.deg2rad(torch.tensor(angle)))
-    z = mu + n_dir*5
+    z = mu + n_dir * 5
     pic = net.from_latent(z.to(device))
     pic = pic.squeeze().cpu().detach().numpy()
     new_frames.append(pic)
@@ -76,6 +75,9 @@ def plot_interpolation(net, latents_np, save_path):
   render_images(inter, 'interpolation', save_path)
 
 def render_images(images, title, save_path):
+  # if np.mean(images) > 10:
+  #   images = images / 255
+
   steps = len(images)
   plt.figure()
   for i, img in enumerate(images):
@@ -92,13 +94,6 @@ def render_images(images, title, save_path):
 
 
 def resize_image(image, size):
-    # original_size = image.shape
-    # scale_factor = (size[0] / original_size[1], size[1] / original_size[0])
-    # # Resize the image using nearest-neighbor interpolation
-    # image = image.resize(size, resample=Image.NEAREST)
-    # return transforms.ToTensor()(image)
-
-
     resize = Resize(size, interpolation=Image.NEAREST)
     resize = Resize(size)
     image = transforms.ToPILImage()(image)  # Convert tensor to PIL Image
@@ -114,6 +109,10 @@ def evaluate_images(n, net, images, labels, title, save_path, to_horizontal=Fals
     chosen_labels = labels[indices]
     chosen_recons = torch.tensor(x_recon[indices])
     
+    # if np.mean(chosen_images) > 10: chosen_images = chosen_images / 255
+    # if np.mean(chosen_labels) > 10: chosen_labels = chosen_labels / 255
+    # if np.mean(chosen_recons) > 10: chosen_recons = chosen_recons / 255
+
     target_size = (chosen_labels.shape[2], chosen_labels.shape[3])  # (height, width)
     
     resized_chosen_images = torch.stack([resize_image(img, target_size) for img in chosen_images])
@@ -155,6 +154,9 @@ def interpolate_images(net, images, steps, save_path, to_horizontal=False, sharp
   return create_video('image_interpolation', inter, save_path, to_horizontal=to_horizontal)
 
 def create_video(name, frames, save_path, transform=True, to_horizontal=False, limit_frames=-1):
+  # if np.mean(frames) > 10:
+  #   frames = frames / 255
+  
   frames = np.array(frames)
   if limit_frames > 0:
     while frames.shape[0] > 500:
@@ -182,42 +184,19 @@ def create_video(name, frames, save_path, transform=True, to_horizontal=False, l
   # return None#HTML(anim.to_html5_video())
   anim.save(f'{save_path}/{name}.mp4', writer='ffmpeg')
 
-def crop_to_shape(image, target_size):
-    """
-    Crop an image to a specific shape.
+# def crop_to_shape(image, target_size):
+#     img_width, img_height = image.size
+#     target_width, target_height = target_size
 
-    Args:
-        image (PIL.Image): Input image.
-        target_size (tuple): Target size (width, height) for cropping.
+#     # Calculate the cropping box
+#     left = (img_width - target_width) / 2
+#     top = (img_height - target_height) / 2
+#     right = (img_width + target_width) / 2
+#     bottom = (img_height + target_height) / 2
 
-    Returns:
-        PIL.Image: Cropped image.
-    """
-    img_width, img_height = image.size
-    target_width, target_height = target_size
+#     # Crop and return the image
+#     return image.crop((left, top, right, bottom))
 
-    # Calculate the cropping box
-    left = (img_width - target_width) / 2
-    top = (img_height - target_height) / 2
-    right = (img_width + target_width) / 2
-    bottom = (img_height + target_height) / 2
-
-    # Crop and return the image
-    return image.crop((left, top, right, bottom))
-
-def load_video_ds(video_path, id_from, id_to, max_size, ratio=4, zoom_pixels=0, to_horizontal=False):
-  video_dataset = VideoDataset(video_path, id_from, id_to, max_size, ratio, zoom_pixels, to_horizontal)
-  print('Video dataset length', video_dataset.X_gt.shape)
-  video_loader = DataLoader(video_dataset, batch_size=16, shuffle=True)
-
-  return video_dataset, video_loader
-
-def load_image_ds(video_path, max_size, ratio=4, to_horizontal=False):
-  image_dataset = ImageDataset(video_path, max_size, ratio, to_horizontal)
-  print('Image dataset length', len(image_dataset))
-  image_loader = DataLoader(image_dataset, batch_size=16, shuffle=True)
-
-  return image_dataset, image_loader
 
 def plot_losses(losses, n_epochs, save_path):
   print("Plotting loss")

@@ -1,7 +1,8 @@
 __INIT__.py
 __pycache__/
-sessions/
-weights/
+
+run_config/*
+!run_config/default*
+
 dataset_config.yaml
-config/*
-!config/default.yaml
+experimanting/

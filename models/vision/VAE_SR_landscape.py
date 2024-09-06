@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from models.SuperRsolution import SuperResolution
+from models.vision.SuperRsolution import SuperResolution
 
 class Encoder(nn.Module):
     def __init__(self, latent_dim):

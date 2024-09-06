@@ -1,0 +1,21 @@
+session_name: 'dogs_test'
+
+dataset:
+  type: 'images'
+  name: 'dogs'
+  is_horizontal: false
+  resize_ratio: 1 # keep at 1
+  max_size: 128 # powers of 2
+
+nn_params:
+  model_type: 'vae'
+  load_weights: false
+  train_as: 'vae'
+  n_epochs: 50
+  latent_dim: 30
+  learning_rate: 1e-4
+  kl_betha: 1.7
+
+analysis:
+  - evaluate_and_interpolate
+  - full_latent_analysis

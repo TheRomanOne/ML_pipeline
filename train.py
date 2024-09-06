@@ -27,6 +27,9 @@ def train_vae(dataloader, model, n_epochs, betha, test_image=None, lr=1e-3) -> t
   losses = []
   frames = []
   pbar = tqdm(range(n_epochs))
+  
+  model.train()
+
   for epoch in pbar:
     for i, (X, y) in enumerate(dataloader):
       x = X.to(device)
@@ -37,6 +40,7 @@ def train_vae(dataloader, model, n_epochs, betha, test_image=None, lr=1e-3) -> t
       opt.zero_grad()
       loss.backward()
       # scheduler.step()
+      torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
       opt.step()
 
       # if device.type == "cuda":
@@ -56,5 +60,7 @@ def train_vae(dataloader, model, n_epochs, betha, test_image=None, lr=1e-3) -> t
 
       pbar.set_description(f"Loss: {l:.3f}")
     torch.cuda.empty_cache()
+  
+  model.eval()
 
   return np.array(losses), frames

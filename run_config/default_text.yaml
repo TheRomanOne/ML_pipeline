@@ -1,0 +1,19 @@
+session_name: 'text_test'
+
+dataset:
+  type: 'text'
+  name: 'story'
+
+nn_params:
+  model_type: 'lstm'
+  load_weights: false
+  train_as: 'lstm'
+  n_epochs: 250
+  learning_rate: 1e-4
+  seq_length: 10
+  embedding_dim: 100
+  hidden_dim: 20
+
+# analysis:
+#   - evaluate_and_interpolate
+#   - full_latent_analysis

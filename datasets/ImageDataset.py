@@ -35,21 +35,16 @@ class ImageDataset(Dataset):
         for file_path in tq:
             img = Image.open(file_path).convert('RGB')
             img = np.array(img)
-            # img = transforms.ToTensor()(img)
+
+            # when uncommenting multiply by 255 in render imaes
+            # if np.mean(img) > 10:
+            #     img = img / 255
+            #     img = np.array(img, dtype=np.float32)
 
             img_shape = torch.tensor(img.shape)[:2]           
-            # normalized_shape = (self.max_size * (img_shape / np.max(img_shape)))
-
-            # Resize transformations
-            _, img_width, img_height = img.shape
-
+            
             if img.shape[0] < normalized_shape[0] or img.shape[1] < normalized_shape[1]:
                 continue
-
-            # if img.shape[0] > img.shape[1]:
-            #     target_width, target_height = normalized_shape
-            # else:
-            #     target_width, target_height = (normalized_shape[1], normalized_shape[0])
 
             target_height, target_width = (img_shape[1] / rat, img_shape[1])
             if target_height > target_width:
