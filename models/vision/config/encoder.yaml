@@ -12,7 +12,7 @@ layers:
     params: 
       size: 32
 
-  - function: relu
+  - function: leakyrelu
     params: 
       negative_slope: 0.2
 
@@ -29,7 +29,7 @@ layers:
     params: 
       size: 64
 
-  - function: relu
+  - function: leakyrelu
     params: 
       negative_slope: 0.2
 
@@ -41,3 +41,6 @@ layers:
       kernel_size: 4
       stride: 2
       padding: 1
+
+  - function: sigmoid
+    params: []

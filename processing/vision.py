@@ -1,7 +1,7 @@
 import torch
 from train import train_model
 from analysis import run_full_analysis, eval_and_interp
-from utils.utils import evaluate_latent_batches, count_parameters
+from utils.utils import evaluate_latent_batches, print_model_params
 from utils.session_utils import load_model_from_params
 import utils.vision_utils as i_utils
 
@@ -31,12 +31,12 @@ def process_vision_session(session, dataset, dataloader):
     session.update({'input_shape': X_gt.shape[2:]})
     vae_sr = load_model_from_params(session)
     vae_sr.to(device)
-    m_total_params, m_trainable_params = count_parameters(vae_sr)
+    m_total_params, m_trainable_params = print_model_params(vae_sr)
     
     losses, frames = train_model(
       dataloader=dataloader,
-      vae=vae_sr,
-      test_image=test_image,
+      model=vae_sr,
+      test_sample=test_image,
       params=params
     )
     i_utils.plot_losses(losses, n_epochs, save_path=f'{session_path}/images')

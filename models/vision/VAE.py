@@ -1,6 +1,5 @@
 import torch, yaml
 import torch.nn as nn
-from models.vision.SuperRsolution import SuperResolution
 import numpy as np
 from architecture_parser import parse_architecture
 
@@ -13,11 +12,9 @@ class Encoder(nn.Module):
         seq, layer_shapes = parse_architecture(input_shape, architecture)
         self.convolutions = nn.Sequential(*seq)
 
-        self.flattened_size = layer_shapes[-1][0] * layer_shapes[-1][1] * architecture[-1]['params']['out_channels']
+        self.flattened_size = layer_shapes[-1][0] * layer_shapes[-1][1] * architecture[-2]['params']['out_channels']
         self.fc_mu = nn.Linear(self.flattened_size, latent_dim)
         self.fc_logvar = nn.Linear(self.flattened_size, latent_dim)
-        # self.relu = nn.LeakyReLU(negative_slope=0.2)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.convolutions(x)
@@ -38,15 +35,11 @@ class Decoder(nn.Module):
         self.layer_shapes = layer_shapes
         self.deconvolutions = nn.Sequential(*seq)
 
-        self.sigmoid = nn.Sigmoid()
-
     def forward(self, z):
         z = self.fc(z)
         z = z.view(z.size(0), -1, self.input_shape[0], self.input_shape[1])
 
         z = self.deconvolutions(z)
-        z = self.sigmoid(z)
-
         return z
 
 class VAE(nn.Module):
@@ -61,10 +54,6 @@ class VAE(nn.Module):
 
         self.encoder = Encoder(latent_dim=params['latent_dim'], input_shape=input_shape, architecture=encoder_architecture['layers'])
         self.decoder = Decoder(latent_dim=params['latent_dim'], input_shape=input_shape, init_size=params['max_size'], architecture=decoder_architecture['layers'])
-        self.sr_1 = SuperResolution()
-        self.sr_2 = SuperResolution()
-        self.relu = nn.LeakyReLU(negative_slope=0.2)
-        self.sigmoid = nn.Sigmoid()
 
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5 * logvar)

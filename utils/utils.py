@@ -62,7 +62,7 @@ def deconv2d_output_shape(input_shape, kernel_size, stride, padding, output_padd
     # Calculate output height/width for ConvTranspose2d (Deconv)
     return (np.array(input_shape) - 1) * stride - 2 * padding + kernel_size + output_padding
 
-def count_parameters(model):
+def print_model_params(model):
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     
@@ -74,5 +74,5 @@ def count_parameters(model):
       size_str += ''.join(current) + ','
     size_str = size_str[:-1][::-1]
     print("Model size:", size_str, 'parameters')
-    # print("Model trainable params", m_trainable_params)
+    print(model)
     return total_params, trainable_params

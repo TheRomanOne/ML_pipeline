@@ -87,7 +87,6 @@ def load_model_from_params(session):
         )
 
     elif model_type == 'vae_sr':
-        # latent_dim = params['latent_dim']
         model = VAE_SR(
             params=params, 
             input_shape=session['input_shape']

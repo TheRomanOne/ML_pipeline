@@ -13,7 +13,7 @@ layers:
     params: 
       size: 64
 
-  - function: relu
+  - function: leakyrelu
     params: 
       negative_slope: 0.2
 
@@ -29,7 +29,7 @@ layers:
     params: 
       size: 32
 
-  - function: relu
+  - function: leakyrelu
     params: 
       negative_slope: 0.2
 

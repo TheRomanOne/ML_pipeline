@@ -20,7 +20,7 @@ if __name__ == '__main__':
   vision_example = 'run_config/default_vision.yaml'
   text_example = 'run_config/default_text.yaml'
 
-  config = parse_args(default=text_example).config
+  config = parse_args(default=vision_example).config
 
   
   # ------------------------ Init session and DB -----------------------

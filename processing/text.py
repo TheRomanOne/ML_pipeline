@@ -2,7 +2,7 @@ import torch
 import utils.vision_utils as i_utils
 from train import train_model
 from analysis import run_full_analysis, eval_and_interp
-from utils.utils import evaluate_latent_batches, count_parameters
+from utils.utils import evaluate_latent_batches, print_model_params
 from utils.text_utils import parse_text, generate_text, get_sequential_data
 from utils.session_utils import load_model_from_params
 
@@ -25,7 +25,7 @@ def process_text_session(session, dataset, dataloader):
     session_path = session['path']
 
     seq_model = load_model_from_params(session)
-    count_parameters(seq_model)
+    print_model_params(seq_model)
 
     losses, sequences = train_model(
       dataloader=dataloader,

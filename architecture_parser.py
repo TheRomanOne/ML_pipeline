@@ -25,7 +25,7 @@ def parse_architecture(input_shape, architecture):
                     padding=a_params['padding']
                 )
             )
-        if a['function'] == 'deconv2d':
+        elif a['function'] == 'deconv2d':
             # Add functional layer
 
             # TODO: remove hack
@@ -49,11 +49,33 @@ def parse_architecture(input_shape, architecture):
                     output_padding=0
                 )
             )
+        elif a['function'] == 'lstm':
+            # Add functional layer
+            action = nn.LSTM(
+                embedding_dim=a_params['embedding_dim'],
+                hidden_dim=a_params['hidden_dim'],
+                num_layers=a_params['num_layers'],
+                bidirectional=True,
+                batch_first=True
+            )
+
+            # # keep track of the convolution shapes
+            # layer_shapes.append(
+            #     deconv2d_output_shape(
+            #         input_shape=layer_shapes[-1],
+            #         kernel_size=a_params['kernel_size'],
+            #         stride=a_params['stride'],
+            #         padding=a_params['padding'],
+            #         output_padding=0
+            #     )
+            # )
         elif a['function'] == 'batchNorm2d':
             action = nn.BatchNorm2d(a_params['size'])
 
-        elif a['function'] == 'relu':
+        elif a['function'] == 'leakyrelu':
             action = nn.LeakyReLU(negative_slope=a_params['negative_slope'])
+        elif a['function'] == 'sigmoid':
+            action = nn.Sigmoid()
 
         seq.append(action)
     return seq, layer_shapes

@@ -10,7 +10,7 @@ nn_params:
   train_as: 'lstm'
   n_epochs: 1000
   learning_rate: 1e-3
-  seq_length: 30
+  seq_length: 40
   embedding_dim: 500
   hidden_dim: 70
 
