@@ -5,11 +5,9 @@ from torch.utils.data import Dataset
 import numpy as np
 
 class VideoDataset(Dataset):
-    def __init__(self, video_path, from_index, to_index, max_size, ratio, zoom_pixels, to_horizontal):
+    def __init__(self, video_path, max_size, ratio, zoom_pixels, to_horizontal):
         self.video_path = video_path
         self.to_horizontal = to_horizontal
-        self.from_index = from_index
-        self.to_index = to_index
         self.zoom_pixels = zoom_pixels
         self.max_size = max_size
         self.ratio = ratio
@@ -29,13 +27,6 @@ class VideoDataset(Dataset):
             ret, frame = cap.read()
             if not ret:
                 break
-
-            if frame_idx < self.from_index:
-              frame_idx += 1
-              continue
-
-            elif frame_idx == self.to_index:
-              break
 
             tr_size = (2, 1, 0) if self.to_horizontal else (2, 0, 1)
 

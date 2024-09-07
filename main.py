@@ -1,8 +1,9 @@
 import os
 import torch
-from utils.session_utils import start_session, load_model_from_params, parse_args
+from utils.session_utils import start_session, parse_args
 from datasets.Loader import load_dataset
 from processing.vision import process_vision_session
+from processing.text import process_text_session
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -19,7 +20,7 @@ if __name__ == '__main__':
   vision_example = 'run_config/default_vision.yaml'
   text_example = 'run_config/default_text.yaml'
 
-  config = parse_args(default=vision_example).config
+  config = parse_args(default=text_example).config
 
   
   # ------------------------ Init session and DB -----------------------
@@ -30,7 +31,9 @@ if __name__ == '__main__':
   params = session['nn_params']
   n_epochs = params['n_epochs']
   
-  dataset, dataloader = load_dataset(session)
+  dataset = load_dataset(session)
 
   if is_vision:
-    process_vision_session(session, dataset, dataloader)
+    process_vision_session(session, *dataset)
+  elif is_text:
+    process_text_session(session, *dataset)

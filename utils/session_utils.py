@@ -3,7 +3,10 @@ import yaml, argparse
 from models.vision.VAE import VAE
 from models.vision.VAE_SR import VAE_SR
 from models.vision.VAE_SR_landscape import VAE_SR_landscape
+from models.sequential.LSTM import LSTMModel
 import time
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 with open('dataset_config.yaml', 'r') as yaml_file:
     dataset_config = yaml.safe_load(yaml_file)
@@ -39,6 +42,8 @@ def start_session(config_path):
         os.mkdir(f'{session_path}/images')
     elif is_text:
         os.mkdir(f'{session_path}/text')
+        os.mkdir(f'{session_path}/images')
+
 
     w_path = '../weights'
     if not os.path.isdir(w_path):
@@ -76,15 +81,30 @@ def load_model_from_params(session):
     model_type = params['model_type'].lower()
 
     if model_type == 'vae':
-        model = VAE(params, session['input_shape'])
+        model = VAE(
+            params=params, 
+            input_shape=session['input_shape']
+        )
 
     elif model_type == 'vae_sr':
-        latent_dim = params['latent_dim']
-        model = VAE_SR(params, session['input_shape'])
+        # latent_dim = params['latent_dim']
+        model = VAE_SR(
+            params=params, 
+            input_shape=session['input_shape']
+        )
 
     elif model_type == 'vae_sr_landscape':
-        latent_dim = params['latent_dim']
-        model = VAE_SR_landscape(latent_dim)
+        model = VAE_SR_landscape(
+            latent_dim=params['latent_dim']
+        )
+
+    elif model_type == 'lstm':
+        model = LSTMModel(
+            vocab_size=params['vocab_size'], 
+            embedding_dim=params['embedding_dim'], 
+            hidden_dim=params['hidden_dim'], 
+            output_dim=params['output_dim']
+        )
 
     else:
         print(f"Model {model_type} is not supported yet")
@@ -97,5 +117,6 @@ def load_model_from_params(session):
     else:
         print('Creating a new model:', model_type)
     
+    model.to(device)
     return model
 

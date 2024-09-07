@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -6,16 +7,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def parse_text(text):
 
     text = text.lower().replace('\n\n', '\n')
-    for sign in ["'s", '.', ',', 'ing ', 'es ', 'ed ']:
+    for sign in ["\n", "'", '.', ',', 'ing ', 'es ', 'ed ', ':', '/', "\\"]:
         text = text.replace(sign, f' {sign} ').replace('  ', ' ')
 
     raw_data = text.split(' ')
-    words = sorted(list(set(raw_data)))
+    dictionary = sorted(list(set(raw_data)))
 
-    word_to_index = {word: idx for idx, word in enumerate(words)}
+    word_to_index = {word: idx for idx, word in enumerate(dictionary)}
     index_to_word = {idx: word for word, idx in word_to_index.items()}
     
-    return raw_data, word_to_index, index_to_word, words
+    return raw_data, word_to_index, index_to_word, dictionary
 
 
 def get_sequential_data(data, seq_length):
@@ -34,7 +35,7 @@ def generate_text(model, start_words, word_to_index, index_to_word, max_length=1
     start_seq = torch.tensor([word_to_index[word] for word in start_words], dtype=torch.long).unsqueeze(0).to(device)
     generated_words = list(start_words)
     
-    for _ in range(max_length):
+    for _ in tqdm(range(max_length)):
         with torch.no_grad():
             output = model(start_seq)
             _, predicted = torch.max(output, dim=1)
