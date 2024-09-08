@@ -4,31 +4,33 @@ import numpy as np
 from torch.nn import CrossEntropyLoss
 from utils.loss_functions import vae_loss
 import torch
+import global_settings as gs
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = gs.device
+
 
 def train_model(dataloader, model, test_sample, config):
 
-  if config['train_style'] == 'vae':
-    result = train_vae(
+  if config['method'] == 'image_reconstruction':
+    result = train_image_reconstruction(
       dataloader=dataloader,
       model=model,
       n_epochs=config['n_epochs'],
       betha=config['kl_betha'],
+      lr=config['learning_rate'],
       test_image=test_sample,
-      lr=config['learning_rate']
     )
-  elif config['train_style'] == 'lstm':
-    result = train_lstm(
+  elif config['method'] == 'sequence_prediction':
+    result = train_sequence_prediction(
       dataloader=dataloader,
       model=model,
       n_epochs=config['n_epochs'],
+      lr=config['learning_rate'],
       test_sequence=test_sample,
-      lr=config['learning_rate']
     )
   return result
 
-def train_lstm(dataloader, model, n_epochs, test_sequence=None, lr=1e-3):
+def train_sequence_prediction(dataloader, model, n_epochs, lr, test_sequence=None):
 
   print("\n\nTraining type: LSTM")
   opt = Adam(model.parameters(), lr=lr)
@@ -60,7 +62,7 @@ def train_lstm(dataloader, model, n_epochs, test_sequence=None, lr=1e-3):
       det = recon_batch.detach()
       if test_sequence is not None:
         with torch.no_grad():
-            det = model(test_sequence)
+            det = model(test_sequence.to(device))
         det = det.detach()
         det = det.cpu()
         det = det.squeeze().numpy()
@@ -73,7 +75,7 @@ def train_lstm(dataloader, model, n_epochs, test_sequence=None, lr=1e-3):
 
   return np.array(losses), sequences
 
-def train_vae(dataloader, model, n_epochs, betha, test_image=None, lr=1e-3) -> tuple:
+def train_image_reconstruction(dataloader, model, n_epochs, betha, lr, test_image=None) -> tuple:
   print("\n\nTraining type: Variational Auto-Encoder")
   opt = Adam(model.parameters(), lr=lr)
   # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=300, gamma=0.01)

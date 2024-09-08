@@ -1,8 +1,8 @@
 import torch
 from tqdm import tqdm
+import global_settings as gs
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+device = gs.device
 
 def parse_text(text):
 

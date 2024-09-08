@@ -5,8 +5,9 @@ from custom_models.VAE_SR import VAE_SR
 from custom_models.VAE_SR_landscape import VAE_SR_landscape
 from custom_models.LSTM import LSTMText, LSTMTimeSeq
 import time
+import global_settings as gs
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = gs.device
 
 with open('dataset_config.yaml', 'r') as yaml_file:
     dataset_config = yaml.safe_load(yaml_file)

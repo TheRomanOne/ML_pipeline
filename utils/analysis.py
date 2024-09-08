@@ -9,7 +9,6 @@ from pandas.plotting import scatter_matrix
 from sklearn.manifold import Isomap, LocallyLinearEmbedding
 from sklearn.manifold import TSNE
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def run_pca(latents_np, save_path):
   print('\t --- pca')
@@ -117,7 +116,7 @@ def eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path):
   print('evaluating 2 images')
   indices = i_utils.evaluate_images(
       n=2,
-      net=model,
+      model=model,
       images=X_gt,
       labels=y_gt,
       title='samples',
@@ -138,7 +137,7 @@ def eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path):
   index = torch.randint(0, X_gt.size(0), (1,)).item()
   i_utils.random_walk_image(
       img=X_gt[index],
-      net=model,
+      model=model,
       angle=35,
       steps=200,
       change_prob=.9,

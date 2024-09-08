@@ -6,8 +6,8 @@ from datasets.TextDataset import TextDataset
 from datasets.TimeSeriesDataset import TimeSeriesDataset
 
 
-def load_video_ds(video_path, batch_size, max_size, ratio, zoom_pixels, to_horizontal):
-  video_dataset = VideoDataset(video_path, max_size, ratio, zoom_pixels, to_horizontal)
+def load_video_ds(video_path, batch_size, max_size, ratio, to_horizontal):
+  video_dataset = VideoDataset(video_path, max_size, ratio, to_horizontal)
   dataloader = DataLoader(video_dataset, batch_size=batch_size, shuffle=True)
   print('Video dataset length', video_dataset.X_gt.shape)
 

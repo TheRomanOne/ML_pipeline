@@ -1,49 +1,57 @@
 import torch
 import utils.vision_utils as i_utils
 from utils.train import train_model
-from utils.analysis import run_full_analysis, eval_and_interp
-from utils.utils import evaluate_latent_batches, print_model_params
-from utils.text_utils import parse_text, generate_text
-from utils.utils import get_sequential_data
+from utils.utils import print_model_params
+from utils.text_utils import generate_text
 from utils.session_utils import load_model_from_params
+from datasets.Loader import load_dataset
+import global_settings as gs
+
+device = gs.device
 
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def get_text_intro(word_to_index):
   test_sequence_text = list(word_to_index.keys())[-10]
   # test_sequence = parse_text(test_sequence_text)[0]
   test_sequence = [word_to_index[test_sequence_text]]
-  text_tensor = torch.tensor(test_sequence, dtype=torch.long).unsqueeze(0).to(device)
+  text_tensor = torch.tensor(test_sequence, dtype=torch.long).unsqueeze(0)
   return test_sequence_text, text_tensor
 
 def get_numeric_intro(dataset):
   X = dataset.X_gt[-10]
   return X[:int(X.shape[0]/3)]
 
-def process_sequential_session(session, dataset, dataloader):
-    
-    session_type = session['dataset']['type']
+def process_sequential_session(session):
 
-    nn_config = session['nn']
-    nn_params = nn_config['params']
+    session_type = session['dataset']['type']
     training_config = session['training']
+    session_path = session['path']
+    nn_config = session['nn']
+
+# ________________________________ Prepare dataset ________________________________ 
+
+    dataset, dataloader = load_dataset(session)
 
     # Create test sequence
     if session_type == 'text':
       test_sequence_text, test_sequence = get_text_intro(word_to_index=dataset.word_to_index)
+      test_sequence.to(device)
     
     elif session_type == 'timeseries':
       test_sequence = get_numeric_intro(dataset)
 
 
 
-# _____________________ Main Sequence _____________________
+# ________________________________ Initialize model ________________________________ 
 
-    session_path = session['path']
-
-    seq_model = load_model_from_params(session['nn'])
+    seq_model = load_model_from_params(nn_config)
     print_model_params(seq_model)
+
+
+
+# __________________________________ Train model __________________________________ 
 
     losses, sequences = train_model(
       dataloader=dataloader,
@@ -53,9 +61,11 @@ def process_sequential_session(session, dataset, dataloader):
     )
     i_utils.plot_losses(losses, training_config['n_epochs'], save_path=f'{session_path}/images')
 
-    # print("Saving weights")
-    # torch.save(seq_model.state_dict(), session['weights_path'])
-# _________________________________________________________
+    print("Saving weights")
+    torch.save(seq_model.state_dict(), nn_config['weights_path'])
+
+
+# __________________________________ Post process __________________________________ 
 
 
     # Sample model
@@ -77,10 +87,9 @@ def process_sequential_session(session, dataset, dataloader):
     elif session_type == 'timeseries':
       pass
 
-    # # --------------------------- Run analysis --------------------------- 
 
-    if len(session['analysis']) == 0:
-      print('No analysis was specified')
+    if len(session['post_process']) == 0:
+      print('No post processing was requested')
       exit()    
     
     

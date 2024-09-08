@@ -32,11 +32,10 @@ class LSTMTimeSeq(nn.Module):
         self.n_stacked_layers = n_stacked_layers
         self.lstm = nn.LSTM(input_dim, hidden_dim, n_stacked_layers, batch_first=True)
         self.fc = nn.Linear(hidden_dim, 1)
+        self.register_buffer('device', None)
 
     def forward(self, x):
         batch_dim = x.size(0)
-        h0 = torch.zeros(self.n_stacked_layers, batch_dim, self.hidden_dim).to(x.device)
-        c0 = torch.zeros(self.n_stacked_layers, batch_dim, self.hidden_dim).to(x.device)
-        out, _ = self.lstm(x, (h0, c0))
+        out, _ = self.lstm(x)
         out = self.fc(out[:, -1, :])
         return out

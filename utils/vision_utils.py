@@ -7,8 +7,10 @@ from torchvision.utils import make_grid
 import torchvision.transforms as transforms
 from torchvision.transforms import Resize
 from PIL import Image
+import global_settings as gs
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = gs.device
+
 
 def sharpen_image(img):
   return img
@@ -36,9 +38,9 @@ def render_image(img, save_path, title='', to_horizontal=False):
   plt.savefig(f'{save_path}/{title}.png', bbox_inches='tight', pad_inches=0)
   plt.close()
 
-def random_walk_image(img, net, angle, steps, change_prob, to_horizontal, save_path):
+def random_walk_image(img, model, angle, steps, change_prob, to_horizontal, save_path):
   print('random walk interpolation')
-  _, mu, lv = net(img.to(device).unsqueeze(0))
+  _, mu, lv = model(img.to(device).unsqueeze(0))
   mu = mu.cpu()
   dir = get_random_direction(lv).cpu().detach().squeeze()
   new_frames = []
@@ -51,12 +53,12 @@ def random_walk_image(img, net, angle, steps, change_prob, to_horizontal, save_p
       row_indices[1] = torch.randint(0, dir.size(0), (1,)).item()
     n_dir = rotate_2d_tensor(dir, row_indices, torch.deg2rad(torch.tensor(angle)))
     z = mu + n_dir * 5
-    pic = net.from_latent(z.to(device))
+    pic = model.from_latent(z.to(device))
     pic = pic.squeeze().cpu().detach().numpy()
     new_frames.append(pic)
   return create_video('random_walk', new_frames, save_path=save_path, to_horizontal=to_horizontal)
 
-def plot_interpolation(net, latents_np, save_path):
+def plot_interpolation(model, latents_np, save_path):
   idx1, idx2 = np.random.choice(len(latents_np), 2, replace=False)
   z1, z2 = latents_np[idx1], latents_np[idx2]
 
@@ -67,11 +69,11 @@ def plot_interpolation(net, latents_np, save_path):
       z = (1 - alpha) * z1 + alpha * z2
       
       with torch.no_grad():
-        net_img = net.from_latent(torch.tensor(z).to(device).unsqueeze(0))
+        model_img = model.from_latent(torch.tensor(z).to(device).unsqueeze(0))
 
-      net_img = net_img.cpu()
-      net_img = net_img.detach().squeeze().numpy()
-      inter.append(net_img)
+      model_img = model_img.cpu()
+      model_img = model_img.detach().squeeze().numpy()
+      inter.append(model_img)
   render_images(inter, 'interpolation', save_path)
 
 def render_images(images, title, save_path):
@@ -100,9 +102,9 @@ def resize_image(image, size):
     image = resize(image)  # Resize image
     return transforms.ToTensor()(image)  # Convert back to tensor
 
-def evaluate_images(n, net, images, labels, title, save_path, to_horizontal=False):
+def evaluate_images(n, model, images, labels, title, save_path, to_horizontal=False):
     print(f'Sampling {n} images')
-    x_recon = evaluate_model_batches(net, images, batches=16)
+    x_recon = evaluate_model_batches(model, images, batches=16)
     
     indices = np.random.choice(len(images), size=n, replace=False)
     chosen_images = images[indices]
@@ -132,24 +134,24 @@ def evaluate_images(n, net, images, labels, title, save_path, to_horizontal=Fals
 
     return indices
 
-def interpolate_images(net, images, steps, save_path, to_horizontal=False, sharpen=False):
-  y_prev, mu_prev, log_var_prev = net(images[0].to(device).unsqueeze(0))
-  prev_z = net.reparameterize(mu_prev, log_var_prev).cpu().detach()
+def interpolate_images(model, images, steps, save_path, to_horizontal=False, sharpen=False):
+  y_prev, mu_prev, log_var_prev = model(images[0].to(device).unsqueeze(0))
+  prev_z = model.reparameterize(mu_prev, log_var_prev).cpu().detach()
 
   inter = []
   images = torch.vstack([images, images[0].unsqueeze(0)])
   for img in images[1:]:
-    y_2, mu_2, log_var_2 = net(img.to(device).unsqueeze(0))
-    img_z = net.reparameterize(mu_2, log_var_2).cpu().detach()
+    y_2, mu_2, log_var_2 = model(img.to(device).unsqueeze(0))
+    img_z = model.reparameterize(mu_2, log_var_2).cpu().detach()
 
     for i in range(steps):
       alpha = i / (steps - 1)
       z = img_z * alpha + prev_z * (1 - alpha)
       z = torch.tensor(z).to(device)
-      net_img = net.from_latent(z).cpu().detach().squeeze().numpy()
+      model_img = model.from_latent(z).cpu().detach().squeeze().numpy()
       if sharpen:
-        net_img = sharpen_image(net_img)
-      inter.append(net_img)
+        model_img = sharpen_image(model_img)
+      inter.append(model_img)
     prev_z = img_z
   return create_video('image_interpolation', inter, save_path, to_horizontal=to_horizontal)
 

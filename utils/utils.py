@@ -1,7 +1,9 @@
 import torch
 import numpy as np
+import global_settings as gs
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = gs.device
+
 
 def rotate_2d_tensor(tensor, row_indices, angle):
 

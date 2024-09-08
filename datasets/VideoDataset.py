@@ -5,10 +5,9 @@ from torch.utils.data import Dataset
 import numpy as np
 
 class VideoDataset(Dataset):
-    def __init__(self, video_path, max_size, ratio, zoom_pixels, to_horizontal):
+    def __init__(self, video_path, max_size, ratio, to_horizontal):
         self.video_path = video_path
         self.to_horizontal = to_horizontal
-        self.zoom_pixels = zoom_pixels
         self.max_size = max_size
         self.ratio = ratio
         self._load_video_frames()

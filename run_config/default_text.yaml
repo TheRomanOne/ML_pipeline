@@ -15,9 +15,9 @@ nn:
     num_layers: 20
 
 training:
-  train_style: 'lstm'
+  method: 'sequence_prediction'
   n_epochs: 1
   learning_rate: 1e-3
 
-analysis:
+post_process:
   generate_text
