@@ -1,0 +1,12 @@
+layers:
+  - function: lstm
+    params:
+      input_size: <input_size>
+      hidden_size: <hidden_size>
+      num_layers: 8
+      bidirectional: True
+      batch_first: True
+
+  # - function: leakyrelu
+  #   params: 
+  #     negative_slope: 0.2

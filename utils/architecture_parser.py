@@ -1,10 +1,12 @@
 import torch.nn as nn
 from utils.utils import conv2d_output_shape, deconv2d_output_shape
 import numpy as np
-def parse_architecture(input_shape, architecture):
+
+def parse_architecture(architecture, input_shape=None):
     seq = []
     layer_shapes = [input_shape]
-    for a in architecture:
+    layers = architecture['layers']
+    for a in layers:
         a_params = a['params']
         if a['function'] == 'conv2d':
             # Add functional layer
@@ -17,14 +19,15 @@ def parse_architecture(input_shape, architecture):
             )
 
             # keep track of the convolution shapes
-            layer_shapes.append(
-                conv2d_output_shape(
-                    input_shape=layer_shapes[-1],
-                    kernel_size=a_params['kernel_size'],
-                    stride=a_params['stride'],
-                    padding=a_params['padding']
+            if input_shape is not None:
+                layer_shapes.append(
+                    conv2d_output_shape(
+                        input_shape=layer_shapes[-1],
+                        kernel_size=a_params['kernel_size'],
+                        stride=a_params['stride'],
+                        padding=a_params['padding']
+                    )
                 )
-            )
         elif a['function'] == 'deconv2d':
             # Add functional layer
 
@@ -40,21 +43,22 @@ def parse_architecture(input_shape, architecture):
             )
 
             # keep track of the convolution shapes
-            layer_shapes.append(
-                deconv2d_output_shape(
-                    input_shape=layer_shapes[-1],
-                    kernel_size=a_params['kernel_size'],
-                    stride=a_params['stride'],
-                    padding=a_params['padding'],
-                    output_padding=0
+            if input_shape is not None:
+                layer_shapes.append(
+                    deconv2d_output_shape(
+                        input_shape=layer_shapes[-1],
+                        kernel_size=a_params['kernel_size'],
+                        stride=a_params['stride'],
+                        padding=a_params['padding'],
+                        output_padding=0
+                    )
                 )
-            )
         elif a['function'] == 'lstm':
             # Add functional layer
             action = nn.LSTM(
-                embedding_dim=a_params['embedding_dim'],
-                hidden_dim=a_params['hidden_dim'],
-                num_layers=a_params['num_layers'],
+                input_size=int(a_params['input_size']),
+                hidden_size=int(a_params['hidden_size']),
+                num_layers=int(a_params['num_layers']) ,
                 bidirectional=True,
                 batch_first=True
             )

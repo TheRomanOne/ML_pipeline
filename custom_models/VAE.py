@@ -1,7 +1,7 @@
 import torch, yaml
 import torch.nn as nn
 import numpy as np
-from architecture_parser import parse_architecture
+from utils.architecture_parser import parse_architecture
 
 
 
@@ -9,10 +9,10 @@ from architecture_parser import parse_architecture
 class Encoder(nn.Module):
     def __init__(self, latent_dim, input_shape, architecture):
         super(Encoder, self).__init__()        
-        seq, layer_shapes = parse_architecture(input_shape, architecture)
+        seq, layer_shapes = parse_architecture(architecture, input_shape)
         self.convolutions = nn.Sequential(*seq)
 
-        self.flattened_size = layer_shapes[-1][0] * layer_shapes[-1][1] * architecture[-2]['params']['out_channels']
+        self.flattened_size = layer_shapes[-1][0] * layer_shapes[-1][1] * architecture['layers'][-2]['params']['out_channels']
         self.fc_mu = nn.Linear(self.flattened_size, latent_dim)
         self.fc_logvar = nn.Linear(self.flattened_size, latent_dim)
 
@@ -30,7 +30,7 @@ class Decoder(nn.Module):
         self.input_shape = np.array([int(self.input_shape[0]), int(self.input_shape[1])])
         self.fc = nn.Linear(latent_dim, init_size * self.input_shape[0] * self.input_shape[1])
 
-        seq, layer_shapes = parse_architecture(self.input_shape, architecture)
+        seq, layer_shapes = parse_architecture(architecture, self.input_shape)
         self.seq = seq
         self.layer_shapes = layer_shapes
         self.deconvolutions = nn.Sequential(*seq)
@@ -46,14 +46,14 @@ class VAE(nn.Module):
     def __init__(self, params, input_shape):
         super(VAE, self).__init__()
 
-        with open('models/vision/config/encoder.yaml', 'r') as yaml_file:
+        with open('custom_models/sequence_config/encoder.yaml', 'r') as yaml_file:
             encoder_architecture = yaml.safe_load(yaml_file)
 
-        with open('models/vision/config/decoder.yaml', 'r') as yaml_file:
+        with open('custom_models/sequence_config/decoder.yaml', 'r') as yaml_file:
             decoder_architecture = yaml.safe_load(yaml_file)
 
-        self.encoder = Encoder(latent_dim=params['latent_dim'], input_shape=input_shape, architecture=encoder_architecture['layers'])
-        self.decoder = Decoder(latent_dim=params['latent_dim'], input_shape=input_shape, init_size=params['max_size'], architecture=decoder_architecture['layers'])
+        self.encoder = Encoder(latent_dim=params['latent_dim'], input_shape=input_shape, architecture=encoder_architecture)
+        self.decoder = Decoder(latent_dim=params['latent_dim'], input_shape=input_shape, init_size=params['max_size'], architecture=decoder_architecture)
 
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5 * logvar)

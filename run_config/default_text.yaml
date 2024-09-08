@@ -1,18 +1,23 @@
-session_name: 'text_test'
+session_name: 'default_text_test'
 
 dataset:
   type: 'text'
-  name: 'mock'
+  name: 'small_mock'
+  batch_size: 64
 
-nn_params:
-  model_type: 'lstm'
+nn:
+  use_model: 'lstm_text'
   load_weights: false
-  train_as: 'lstm'
-  n_epochs: 1000
+  params:
+    seq_length: 10
+    embedding_dim: 36 * 4
+    hidden_dim: 10
+    num_layers: 20
+
+training:
+  train_style: 'lstm'
+  n_epochs: 1
   learning_rate: 1e-3
-  seq_length: 40
-  embedding_dim: 500
-  hidden_dim: 70
 
 analysis:
-  - 
+  generate_text

@@ -76,3 +76,13 @@ def print_model_params(model):
     print("Model size:", size_str, 'parameters')
     print(model)
     return total_params, trainable_params
+
+def get_sequential_data(data, seq_length):
+    sequences = []
+    labels = []
+    for i in range(len(data) - seq_length):
+        seq = data[i:i+seq_length]
+        label = data[i+seq_length]
+        sequences.append(seq)
+        labels.append(label)
+    return sequences, labels

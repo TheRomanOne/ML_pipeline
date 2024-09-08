@@ -6,11 +6,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def parse_text(text):
 
-    text = text.lower().replace('\n\n', '\n')
-    for sign in ["\n", "'", '.', ',', 'ing ', 'es ', 'ed ', ':', '/', "\\"]:
-        text = text.replace(sign, f' {sign} ').replace('  ', ' ')
+    # text = text.lower().replace('\n\n', '\n')
+    # for sign in ["\n", "'", '"', '!', '.', ',', 'ing ', 'es ', 'ed ', ':', '/', "\\", '?']:
+    #     text = text.replace(sign, f' {sign} ').replace('  ', ' ')
 
-    raw_data = text.split(' ')
+    # raw_data = text.split(' ')
+
+    raw_data = list(text.lower())
     dictionary = sorted(list(set(raw_data)))
 
     word_to_index = {word: idx for idx, word in enumerate(dictionary)}
@@ -18,16 +20,6 @@ def parse_text(text):
     
     return raw_data, word_to_index, index_to_word, dictionary
 
-
-def get_sequential_data(data, seq_length):
-    sequences = []
-    labels = []
-    for i in range(len(data) - seq_length):
-        seq = data[i:i+seq_length]
-        label = data[i+seq_length]
-        sequences.append(seq)
-        labels.append(label)
-    return sequences, labels
 
 def generate_text(model, start_words, word_to_index, index_to_word, max_length=10):
     start_words = parse_text(start_words)[0]

@@ -1,9 +1,9 @@
 import os, shutil, torch
 import yaml, argparse
-from models.vision.VAE import VAE
-from models.vision.VAE_SR import VAE_SR
-from models.vision.VAE_SR_landscape import VAE_SR_landscape
-from models.sequential.LSTM import LSTMModel
+from custom_models.VAE import VAE
+from custom_models.VAE_SR import VAE_SR
+from custom_models.VAE_SR_landscape import VAE_SR_landscape
+from custom_models.LSTM import LSTMText, LSTMTimeSeq
 import time
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -15,16 +15,16 @@ def start_session(config_path):
     print('Loading config:', config_path)
 
     with open(config_path, 'r') as yaml_file:
-        run_config = yaml.safe_load(yaml_file)
-    if len(run_config['session_name']) == 0:
-        run_config['session_name'] = 'session_' + str(time.time()).split('.')[0]
-    session_name = run_config['session_name']
-    dataset= run_config['dataset']
-    scene_name = dataset['name']
-    scene_type = dataset['type']
+        session = yaml.safe_load(yaml_file)
+    if len(session['session_name']) == 0:
+        session['session_name'] = 'session_' + str(time.time()).split('.')[0]
+    session_name = session['session_name']
 
-    is_vision = scene_type == 'images' or scene_type == 'videos'
-    is_text = scene_type == 'text'
+    scene_name = session['dataset']['name']
+    scene_type = session['dataset']['type']
+
+    is_vision = scene_type == 'image' or scene_type == 'video'
+    is_sequential = scene_type == 'text' or scene_type == 'timeseries'
 
     print(f'Starting session for {scene_type}:', session_name)
     if not os.path.isdir('../sessions'):
@@ -37,12 +37,11 @@ def start_session(config_path):
         shutil.rmtree(session_path)
 
     os.mkdir(session_path)
+    os.mkdir(f'{session_path}/images')
     if is_vision:
         os.mkdir(f'{session_path}/videos')
-        os.mkdir(f'{session_path}/images')
-    elif is_text:
-        os.mkdir(f'{session_path}/text')
-        os.mkdir(f'{session_path}/images')
+    elif is_sequential:
+        os.mkdir(f'{session_path}/{scene_type}')
 
 
     w_path = '../weights'
@@ -51,18 +50,22 @@ def start_session(config_path):
     
     weights_path = f"{w_path}/{session_name}.pth"
     
-    run_config['nn_params']['learning_rate'] = float(run_config['nn_params']['learning_rate'])
+    # evaluate expressions if exist in config (such as: param = '.5 * 1e-3')
+    for k in session['nn']['params'].keys():
+        if isinstance(session['nn']['params'][k], str):
+            session['nn']['params'][k] = eval(session['nn']['params'][k])
     
-    if is_vision:
-        run_config['nn_params']['max_size'] = run_config['dataset']['max_size']
-        
-    run_config.update({
-        'path': session_path,
-        'weights_path': weights_path,
-        'dataset_path': dataset_config[scene_type][scene_name],
-    })
+    if isinstance(session['training']['learning_rate'], str):
+        session['training']['learning_rate'] = eval(session['training']['learning_rate'])
 
-    return run_config, is_vision, is_text
+    if is_vision:
+        session['dataset']['max_size'] = session['nn']['params']['max_size']
+        
+    session.update({ 'path': session_path })
+    session['nn'].update({ 'weights_path': weights_path })
+    session['dataset'].update({ 'dataset_path': dataset_config[scene_type][scene_name] })
+
+    return session, is_vision, is_sequential
     
 def load_weights(model, weights_path):
     if os.path.isfile(weights_path):
@@ -71,50 +74,60 @@ def load_weights(model, weights_path):
     else:
         print('No model checkout found')
 
-def parse_args(default):
+def load_config(default):
     parser = argparse.ArgumentParser(description="Inset name and type")
     parser.add_argument('--config', default=default, type=str, help='Type argument')
     return parser.parse_args()
 
-def load_model_from_params(session):
-    params = session['nn_params']
-    model_type = params['model_type'].lower()
+def load_model_from_params(nn_config):
+    params = nn_config['params']
+    model = nn_config['use_model'].lower()
 
-    if model_type == 'vae':
+    if model == 'vae':
         model = VAE(
             params=params, 
-            input_shape=session['input_shape']
+            input_shape=params['input_shape']
         )
 
-    elif model_type == 'vae_sr':
+    elif model == 'vae_sr':
         model = VAE_SR(
             params=params, 
-            input_shape=session['input_shape']
+            input_shape=params['input_shape']
         )
 
-    elif model_type == 'vae_sr_landscape':
+    elif model == 'vae_sr_landscape':
         model = VAE_SR_landscape(
             latent_dim=params['latent_dim']
         )
 
-    elif model_type == 'lstm':
-        model = LSTMModel(
-            vocab_size=params['vocab_size'], 
+    elif model == 'lstm_text':
+        model = LSTMText(
+            vocab_size=params['input_dim'], 
             embedding_dim=params['embedding_dim'], 
             hidden_dim=params['hidden_dim'], 
-            output_dim=params['output_dim']
+            num_layers=params['num_layers']
         )
 
+    elif model == 'lstm_time_seq':
+        model = LSTMTimeSeq(
+            input_dim=params['input_dim'], 
+            hidden_dim=params['hidden_dim'], 
+            n_stacked_layers=params['n_layers']
+        )
     else:
-        print(f"Model {model_type} is not supported yet")
+        print(f"Model {model} is not supported yet")
         exit()
     
 
-    if params['load_weights']:
-        print('Loading weight for:', model_type)
-        load_weights(model, session['weights_path'])
+    if nn_config['load_weights']:
+        print('Loading weight for:', model)
+        try:
+            load_weights(model, nn_config['weights_path'])
+        except Exception:
+            print("Failed to load weights. Probably due to a change in nn in the config")
+            exit()
     else:
-        print('Creating a new model:', model_type)
+        print('Creating a new model:', model)
     
     model.to(device)
     return model

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from models.vision.SuperRsolution import SuperResolution
-from models.vision.VAE import VAE
+from custom_models.SuperRsolution import SuperResolution
+from custom_models.VAE import VAE
 
 class VAE_SR(VAE):
     def __init__(self, params, input_shape):

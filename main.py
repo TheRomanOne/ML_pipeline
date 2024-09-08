@@ -1,39 +1,44 @@
 import os
 import torch
-from utils.session_utils import start_session, parse_args
+from utils.session_utils import start_session, load_config
 from datasets.Loader import load_dataset
 from processing.vision import process_vision_session
-from processing.text import process_text_session
+from processing.sequential import process_sequential_session
 import warnings
 
 warnings.filterwarnings("ignore")
 
 os.system('clear')
-torch.cuda.empty_cache()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('\n\nDevice:', device, '\n\n')
 
+if str(device) != 'cuda':
+  print("Cuda was unable to start. Since training on a CPU is a terrible idea, the process will now terminate.\nPlease consider restarting the computer ")
+  exit()
+
+torch.cuda.empty_cache()
+torch.cuda.reset_max_memory_allocated()
 
 
 if __name__ == '__main__':
 
-  vision_example = 'run_config/default_vision.yaml'
+  image_example = 'run_config/default_image.yaml'
+  video_example = 'run_config/default_video.yaml'
   text_example = 'run_config/default_text.yaml'
+  timeseries_example = 'run_config/default_timeseries.yaml'
 
-  config = parse_args(default=vision_example).config
+  config = load_config(default=vision_example).config
 
   
   # ------------------------ Init session and DB -----------------------
 
-  session, is_vision, is_text = start_session(config)
+  session, is_vision, is_equential = start_session(config)
   session_name = session['session_name']
   session_path = session['path']
-  params = session['nn_params']
-  n_epochs = params['n_epochs']
   
   dataset = load_dataset(session)
 
   if is_vision:
     process_vision_session(session, *dataset)
-  elif is_text:
-    process_text_session(session, *dataset)
+  elif is_equential:
+    process_sequential_session(session, *dataset)

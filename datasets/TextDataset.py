@@ -1,7 +1,8 @@
 import torch
 import numpy as np
 from torch.utils.data import Dataset
-from utils.text_utils import parse_text, get_sequential_data
+from utils.text_utils import parse_text
+from utils.utils import get_sequential_data
 
 class TextDataset(Dataset):
     def __init__(self, text_path, seq_length):

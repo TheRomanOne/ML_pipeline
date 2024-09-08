@@ -2,29 +2,29 @@ from torch.optim import Adam
 from tqdm import tqdm
 import numpy as np
 from torch.nn import CrossEntropyLoss
-from loss_functions import vae_loss
+from utils.loss_functions import vae_loss
 import torch
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def train_model(dataloader, model, test_sample, params):
-  # train Variational Auto Encode
-  if params['train_as'] == 'vae':
+def train_model(dataloader, model, test_sample, config):
+
+  if config['train_style'] == 'vae':
     result = train_vae(
       dataloader=dataloader,
       model=model,
-      n_epochs=params['n_epochs'],
-      betha=params['kl_betha'],
+      n_epochs=config['n_epochs'],
+      betha=config['kl_betha'],
       test_image=test_sample,
-      lr=params['learning_rate']
+      lr=config['learning_rate']
     )
-  elif params['train_as'] == 'lstm':
+  elif config['train_style'] == 'lstm':
     result = train_lstm(
       dataloader=dataloader,
       model=model,
-      n_epochs=params['n_epochs'],
+      n_epochs=config['n_epochs'],
       test_sequence=test_sample,
-      lr=params['learning_rate']
+      lr=config['learning_rate']
     )
   return result
 
