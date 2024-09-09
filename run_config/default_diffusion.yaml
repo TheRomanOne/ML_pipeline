@@ -1,0 +1,24 @@
+session_name: 'diffusion_snowboard'
+
+dataset:
+  type: 'video'
+  name: 'snowboard'
+  is_horizontal: false
+  resize_ratio: 1 # keep at 1
+  batch_size: 8
+
+nn:
+  use_model: 'unet'
+  load_weights: false
+  params:
+    base_filters: 64
+    max_size: 256
+
+training:
+  method: 'diffusion'
+  n_epochs: 15
+  learning_rate: .5*1e-3
+
+post_process:
+  # - evaluate_and_interpolate
+  - test_diffusion

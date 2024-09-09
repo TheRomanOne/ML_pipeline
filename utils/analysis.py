@@ -8,7 +8,8 @@ import pandas as pd
 from pandas.plotting import scatter_matrix
 from sklearn.manifold import Isomap, LocallyLinearEmbedding
 from sklearn.manifold import TSNE
-
+from global_settings import device
+from custom_models.UNet import forward_diffusion
 
 def run_pca(latents_np, save_path):
   print('\t --- pca')
@@ -113,9 +114,9 @@ def run_full_analysis(latents_np, save_path):
   run_heatmap(latents_np, save_path)
 
 def eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path):
-  print('evaluating 2 images')
+  print('evaluating 5 images')
   indices = i_utils.evaluate_images(
-      n=2,
+      n=5,
       model=model,
       images=X_gt,
       labels=y_gt,
@@ -125,13 +126,13 @@ def eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path):
   )
 
 
-  print('interpolating 2 images')
+  print('interpolating 5 images')
   s = X_gt.shape[0]
   # sampled_indices = np.random.choice(s, 20, replace=False)
   sampled_indices = indices
   sampled_indices = np.sort(sampled_indices)
   _imgs = X_gt[-s:][sampled_indices]
-  i_utils.interpolate_images(model, _imgs, steps=5, save_path=f'{session_path}/videos', to_horizontal=to_horizontal, sharpen=True)
+  i_utils.interpolate_images(model, _imgs, steps=5, save_path=f'{session_path}/videos', to_horizontal=to_horizontal)
 
 
   index = torch.randint(0, X_gt.size(0), (1,)).item()
@@ -144,3 +145,36 @@ def eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path):
       to_horizontal=to_horizontal,
       save_path=f'{session_path}/videos'
   )
+
+
+# Testing the model on noisy images
+def test_diffusion(model, images, save_path):
+  model.eval()
+  with torch.no_grad():
+    images = images.to(device)
+
+    # Add noise
+    t = torch.rand(images.size(0), 1, 1, 1).to(device) * np.deg2rad(180)
+    noisy_images = forward_diffusion(images, t, model.num_base_filters)
+
+    denoised = []
+
+    # denoise real image
+    reconstructed_images = [noisy_images[0].unsqueeze(0)]
+    while len(reconstructed_images) < 10:
+      reconstructed_images.append(model(reconstructed_images[-1]))
+    reconstructed_images = torch.tensor(np.array([i.squeeze().detach().cpu() for i in reconstructed_images]))
+    denoised.append(reconstructed_images)
+    
+    # denoise nooise
+    for i in range(2):
+      # reconstructed_images = [torch.rand_like(images[0]).unsqueeze(0)]
+      reconstructed_images = [torch.rand_like(noisy_images[0].unsqueeze(0))]
+      while len(reconstructed_images) < 10:
+        reconstructed_images.append(model(reconstructed_images[-1]))
+      reconstructed_images = torch.tensor(np.array([i.squeeze().detach().cpu() for i in reconstructed_images]))
+      denoised.append(reconstructed_images)
+
+    
+    i_utils.render_image_grid(denoised[0], denoised[1], denoised[2], save_path)
+

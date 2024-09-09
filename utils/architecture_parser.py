@@ -63,23 +63,17 @@ def parse_architecture(architecture, input_shape=None):
                 batch_first=True
             )
 
-            # # keep track of the convolution shapes
-            # layer_shapes.append(
-            #     deconv2d_output_shape(
-            #         input_shape=layer_shapes[-1],
-            #         kernel_size=a_params['kernel_size'],
-            #         stride=a_params['stride'],
-            #         padding=a_params['padding'],
-            #         output_padding=0
-            #     )
-            # )
         elif a['function'] == 'batchNorm2d':
             action = nn.BatchNorm2d(a_params['size'])
 
         elif a['function'] == 'leakyrelu':
             action = nn.LeakyReLU(negative_slope=a_params['negative_slope'])
+        elif a['function'] == 'silu':
+            action = nn.SiLU()
         elif a['function'] == 'sigmoid':
             action = nn.Sigmoid()
+        elif a['function'] == 'tanh':
+            action = nn.Tanh()
 
         seq.append(action)
     return seq, layer_shapes

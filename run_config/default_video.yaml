@@ -5,7 +5,7 @@ dataset:
   name: 'clouds'
   is_horizontal: false
   resize_ratio: 1 # keep at 1
-  batch_size: 8
+  batch_size: 64
 
 
 nn:
@@ -13,13 +13,13 @@ nn:
   load_weights: false
   params:
     max_size: 128 # powers of 2
-    latent_dim: 100
+    latent_dim: 10
 
 training:
-  method: 'image_reconstruction'
-  n_epochs: 1
+  method: 'vae_reconstruction'
+  n_epochs: 100
   learning_rate: 1e-3
-  kl_betha: 1.3
+  kl_betha: 1.5
 
 post_process:
   - evaluate_and_interpolate

@@ -1,53 +1,40 @@
 from torch.optim import Adam
 from tqdm import tqdm
 import numpy as np
-from torch.nn import CrossEntropyLoss
 from utils.loss_functions import vae_loss
 import torch
-import global_settings as gs
+from global_settings import device
+import torch.nn as nn
+from custom_models.UNet import forward_diffusion
 
-device = gs.device
-
-
-def train_model(dataloader, model, test_sample, config):
-
-  if config['method'] == 'image_reconstruction':
-    result = train_image_reconstruction(
-      dataloader=dataloader,
-      model=model,
-      n_epochs=config['n_epochs'],
-      betha=config['kl_betha'],
-      lr=config['learning_rate'],
-      test_image=test_sample,
-    )
-  elif config['method'] == 'sequence_prediction':
-    result = train_sequence_prediction(
-      dataloader=dataloader,
-      model=model,
-      n_epochs=config['n_epochs'],
-      lr=config['learning_rate'],
-      test_sequence=test_sample,
-    )
-  return result
-
-def train_sequence_prediction(dataloader, model, n_epochs, lr, test_sequence=None):
-
-  print("\n\nTraining type: LSTM")
+def train_diffusion(dataloader, model, n_epochs, lr, test_image=None) -> tuple:
+  print("\n\nTraining type: Diffusion")
   opt = Adam(model.parameters(), lr=lr)
   # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=300, gamma=0.01)
 
   losses = []
-  sequences = []
+  frames = []
   pbar = tqdm(range(n_epochs))
-  loss_f = CrossEntropyLoss()
+  
   model.train()
-
-  for _ in pbar:
+  loss_f = nn.MSELoss()
+  
+  for epoch in pbar:
     for X, y in dataloader:
       x = X.to(device)
       y = y.to(device)
-      recon_batch = model(x)
+      
+      # Forward diffusion
+      t = torch.rand(x.size(0), 1, 1, 1).to(device) * np.deg2rad(180)
+      noisy_x = forward_diffusion(x, t, model.num_base_filters)
+
+
+      # TODO: add positional encoding
+      recon_batch = model(noisy_x)
+
+      # Compute loss (reconstruct original images)
       loss = loss_f(recon_batch, y)
+
 
       opt.zero_grad()
       loss.backward()
@@ -60,22 +47,23 @@ def train_sequence_prediction(dataloader, model, n_epochs, lr, test_sequence=Non
       losses.append(l)
 
       det = recon_batch.detach()
-      if test_sequence is not None:
+      if test_image is not None:
         with torch.no_grad():
-            det = model(test_sequence.to(device))
+            det = model(test_image.unsqueeze(0))
         det = det.detach()
         det = det.cpu()
         det = det.squeeze().numpy()
-        sequences.append(det)
+        frames.append(det)
 
       pbar.set_description(f"Loss: {l:.3f}")
     torch.cuda.empty_cache()
   
   model.eval()
 
-  return np.array(losses), sequences
+  return np.array(losses), frames
 
-def train_image_reconstruction(dataloader, model, n_epochs, betha, lr, test_image=None) -> tuple:
+
+def train_vae(dataloader, model, n_epochs, betha, lr, test_image=None) -> tuple:
   print("\n\nTraining type: Variational Auto-Encoder")
   opt = Adam(model.parameters(), lr=lr)
   # scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=300, gamma=0.01)

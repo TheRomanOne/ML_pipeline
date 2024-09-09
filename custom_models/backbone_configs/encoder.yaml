@@ -12,9 +12,8 @@ layers:
     params: 
       size: 32
 
-  - function: leakyrelu
-    params: 
-      negative_slope: 0.2
+  - function: silu
+    params: []
 
   # ______________   LAYER 2  ______________
   - function: conv2d
@@ -29,9 +28,8 @@ layers:
     params: 
       size: 64
 
-  - function: leakyrelu
-    params: 
-      negative_slope: 0.2
+  - function: silu
+    params: []
 
   # ______________   LAYER 3  ______________
   - function: conv2d
@@ -42,5 +40,6 @@ layers:
       stride: 2
       padding: 1
 
-  - function: sigmoid
+  - function: silu
     params: []
+

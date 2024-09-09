@@ -1,11 +1,12 @@
 import torch
-from utils.train import train_model
-from utils.analysis import run_full_analysis, eval_and_interp
+from train.train import train_model
+from utils.analysis import run_full_analysis, eval_and_interp, test_diffusion
 from utils.utils import evaluate_latent_batches, print_model_params
 from utils.session_utils import load_model_from_params
 import utils.vision_utils as i_utils
 from datasets.Loader import load_dataset
 import global_settings as gs
+
 
 device = gs.device
 
@@ -40,8 +41,8 @@ def process_vision_session(session):
 
 # ________________________________ Initialize model ________________________________ 
  
-    vae = load_model_from_params(nn_config)
-    print_model_params(vae)
+    model = load_model_from_params(nn_config)
+    print_model_params(model)
 
 
 
@@ -50,14 +51,14 @@ def process_vision_session(session):
 
     losses, frames = train_model(
       dataloader=dataloader,
-      model=vae,
+      model=model,
+      config=training_config,
       test_sample=test_image,
-      config=training_config
     )
     i_utils.plot_losses(losses, training_config['n_epochs'], save_path=f'{session_path}/images')
 
     print("Saving weights")
-    torch.save(vae.state_dict(), nn_config['weights_path'])
+    torch.save(model.state_dict(), nn_config['weights_path'])
 
     print('Creating learning video')
     i_utils.create_video('learning', frames, save_path=f'{session_path}/videos', to_horizontal=to_horizontal, limit_frames=500)
@@ -71,10 +72,13 @@ def process_vision_session(session):
       print('No post processing was requested')
       exit() 
 
-    if 'evaluate_and_interpolate':
-      eval_and_interp(vae, X_gt, y_gt, to_horizontal, session_path)
+    if 'evaluate_and_interpolate' in session['post_process']:
+      eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path)
     
     if 'full_latent_analysis' in session['post_process']:
-      latents_np = evaluate_latent_batches(vae, X_gt, batches=16)
-      i_utils.plot_interpolation(vae, latents_np, f'{session_path}/images')
+      latents_np = evaluate_latent_batches(model, X_gt, batches=16)
+      i_utils.plot_interpolation(model, latents_np, f'{session_path}/images')
       run_full_analysis(latents_np, save_path=f'{session_path}/images')
+    
+    if 'test_diffusion' in session['post_process']:
+       test_diffusion(model, X_gt, save_path=f'{session_path}/images')

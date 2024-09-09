@@ -11,22 +11,20 @@ import global_settings as gs
 
 device = gs.device
 
+def normalized_image(img):
 
-def sharpen_image(img):
+  mn = img.min()
+  img = img - mn
+  img = img / img.max()
+  img = img * 255
+  img = torch.tensor(img).int().numpy()
+
   return img
-    # return cv2.filter2D(im, -1,
-    #   np.array([[0, -1, 0],
-    #             [-1, 5, -1],
-    #             [0, -1, 0]])
-    # )
 
 def render_image(img, save_path, title='', to_horizontal=False):
-  # img = ((img / 2 + .5))
-  # size = img.shape[1:]
-  # if torch.mean(img) > 10:
-  #   img = img / 255
 
   img = np.transpose(img,  (1, 2, 0))
+  img = normalized_image(img)
   if to_horizontal:
     img = torch.rot90(img.unsqueeze(0), k=3, dims=[1, 2]).squeeze()
 
@@ -77,20 +75,61 @@ def plot_interpolation(model, latents_np, save_path):
   render_images(inter, 'interpolation', save_path)
 
 def render_images(images, title, save_path):
-  # if np.mean(images) > 10:
-  #   images = images / 255
-
   steps = len(images)
   plt.figure()
   for i, img in enumerate(images):
+    img = np.transpose(img, (1, 2, 0))
+    img = normalized_image(img)
     plt.subplot(1, steps, i + 1)
-    plt.imshow(np.transpose(img, (1, 2, 0)), cmap='gray')
+    plt.imshow(img, cmap='gray')
     plt.axis('off')
   plt.savefig(f'{save_path}/{title}.png', bbox_inches='tight', pad_inches=0)
   # plt.show()
   plt.close()
 
 
+# Function to show images
+def render_image_grid(original, noisy, reconstructed, save_path):
+    num = original.shape[0]
+    fig, axs = plt.subplots(3, num, figsize=(15, 3))
+
+    # Set white space between images
+    plt.subplots_adjust(wspace=0.1, hspace=0.1)
+
+    # Titles
+    # axs[0, 0].set_title('Original', fontsize=10, pad=10)
+    # axs[1, 0].set_title('Noisy', fontsize=10, pad=10)
+    # axs[2, 0].set_title('Reconstructed', fontsize=10, pad=10)
+    
+    for i in range(num):
+        # Plot original images
+        x = (original[i].permute(1, 2, 0) * 0.5 + 0.5).numpy()
+        x = normalized_image(x)
+        axs[0, i].imshow(x)
+        axs[0, i].set_axis_off()
+        
+        # Plot noisy images
+        nx = (noisy[i].permute(1, 2, 0) * 0.5 + 0.5).numpy()
+        nx = normalized_image(nx)
+        axs[1, i].imshow(nx)
+        axs[1, i].set_axis_off()
+        
+        # Plot reconstructed images
+        rx = (reconstructed[i].permute(1, 2, 0) * 0.5 + 0.5).numpy()
+        rx = normalized_image(rx)
+        axs[2, i].imshow(rx)
+        axs[2, i].set_axis_off()
+
+    # Add white borders around images
+    for ax in axs.flatten():
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_edgecolor('white')
+            spine.set_linewidth(1)  # Set the thickness of the border
+    
+    # Save the figure
+    plt.savefig(f'{save_path}/exp_with_borders.png', bbox_inches='tight', pad_inches=0.1)
 
 
 
@@ -134,7 +173,8 @@ def evaluate_images(n, model, images, labels, title, save_path, to_horizontal=Fa
 
     return indices
 
-def interpolate_images(model, images, steps, save_path, to_horizontal=False, sharpen=False):
+
+def interpolate_images(model, images, steps, save_path, to_horizontal=False):
   y_prev, mu_prev, log_var_prev = model(images[0].to(device).unsqueeze(0))
   prev_z = model.reparameterize(mu_prev, log_var_prev).cpu().detach()
 
@@ -149,8 +189,6 @@ def interpolate_images(model, images, steps, save_path, to_horizontal=False, sha
       z = img_z * alpha + prev_z * (1 - alpha)
       z = torch.tensor(z).to(device)
       model_img = model.from_latent(z).cpu().detach().squeeze().numpy()
-      if sharpen:
-        model_img = sharpen_image(model_img)
       inter.append(model_img)
     prev_z = img_z
   return create_video('image_interpolation', inter, save_path, to_horizontal=to_horizontal)
@@ -168,18 +206,16 @@ def create_video(name, frames, save_path, transform=True, to_horizontal=False, l
     frames = np.transpose(frames, (0, 2, 3, 1))
   if to_horizontal:
     frames = np.rot90(frames, k=3, axes=(1, 2))
-  # if sharpen:
-  #   frames = sharpen_image(frames)
-  # frames = ((frames / 2 + .5))
+
   fig = plt.figure()
   plt.axis('off')
-  im = plt.imshow(frames[0])
+  im = plt.imshow(normalized_image(frames[0]))
   plt.close() # this is required to not display the generated image
   def init():
-      im.set_data(frames[0])
+      im.set_data(normalized_image(frames[0]))
 
   def animate(i):
-      im.set_data(frames[i])
+      im.set_data(normalized_image(frames[i]))
       return im
 
   anim = animation.FuncAnimation(fig, animate, init_func=init, frames=frames.shape[0], interval=100)

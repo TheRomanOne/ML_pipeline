@@ -13,12 +13,12 @@ def parse_text(text):
     # raw_data = text.split(' ')
 
     raw_data = list(text.lower())
-    dictionary = sorted(list(set(raw_data)))
+    vocabulary = sorted(list(set(raw_data)))
 
-    word_to_index = {word: idx for idx, word in enumerate(dictionary)}
+    word_to_index = {word: idx for idx, word in enumerate(vocabulary)}
     index_to_word = {idx: word for word, idx in word_to_index.items()}
     
-    return raw_data, word_to_index, index_to_word, dictionary
+    return raw_data, word_to_index, index_to_word, vocabulary
 
 
 def generate_text(model, start_words, word_to_index, index_to_word, max_length=10):

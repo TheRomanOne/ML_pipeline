@@ -22,7 +22,7 @@ class VideoDataset(Dataset):
 
         tq = tqdm(range(n_frames))
         tq.set_description(f"Processing frames")
-        for frame_idx in tq:
+        for _ in tq:
             ret, frame = cap.read()
             if not ret:
                 break
@@ -30,7 +30,11 @@ class VideoDataset(Dataset):
             tr_size = (2, 1, 0) if self.to_horizontal else (2, 0, 1)
 
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = torch.from_numpy(frame).float().permute(tr_size) / 255.0
+            frame = torch.from_numpy(frame).float().permute(tr_size)
+            # normalize to [-1 ~ 1] tensor
+            frame = frame / 255.
+            frame = (frame * 2) - 1
+
             img_shape = torch.tensor(frame.shape)[1:].numpy()
 
             # make square
@@ -56,7 +60,6 @@ class VideoDataset(Dataset):
             y_frame = y_tr(frame)
             y_gt.append(y_frame.numpy())
 
-            frame_idx += 1
 
         cap.release()
         # X_gt = np.concatenate(X_gt, axis=0)

@@ -4,6 +4,7 @@ from custom_models.VAE import VAE
 from custom_models.VAE_SR import VAE_SR
 from custom_models.VAE_SR_landscape import VAE_SR_landscape
 from custom_models.LSTM import LSTMText, LSTMTimeSeq
+from custom_models.UNet import UNet
 import time
 import global_settings as gs
 
@@ -75,33 +76,42 @@ def load_weights(model, weights_path):
     else:
         print('No model checkout found')
 
-def load_config(default):
+def parse_args():
     parser = argparse.ArgumentParser(description="Inset name and type")
-    parser.add_argument('--config', default=default, type=str, help='Type argument')
-    return parser.parse_args()
+    parser.add_argument('--config', type=str, help='Type argument')
+    parser.add_argument('--name', type=str, help='Type argument')
+
+    parsed = parser.parse_args()
+
+    if parsed.name and parsed.config:
+        print("Both namd and config path were given. choose one")
+        exit()
+    
+    return parsed
+
 
 def load_model_from_params(nn_config):
     params = nn_config['params']
-    model = nn_config['use_model'].lower()
+    use_model = nn_config['use_model'].lower()
 
-    if model == 'vae':
+    if use_model == 'vae':
         model = VAE(
             params=params, 
             input_shape=params['input_shape']
         )
 
-    elif model == 'vae_sr':
+    elif use_model == 'vae_sr':
         model = VAE_SR(
             params=params, 
             input_shape=params['input_shape']
         )
 
-    elif model == 'vae_sr_landscape':
+    elif use_model == 'vae_sr_landscape':
         model = VAE_SR_landscape(
             latent_dim=params['latent_dim']
         )
 
-    elif model == 'lstm_text':
+    elif use_model == 'lstm_text':
         model = LSTMText(
             vocab_size=params['input_dim'], 
             embedding_dim=params['embedding_dim'], 
@@ -109,26 +119,30 @@ def load_model_from_params(nn_config):
             num_layers=params['num_layers']
         )
 
-    elif model == 'lstm_time_seq':
+    elif use_model == 'lstm_time_seq':
         model = LSTMTimeSeq(
             input_dim=params['input_dim'], 
             hidden_dim=params['hidden_dim'], 
             n_stacked_layers=params['n_layers']
         )
+    elif use_model == 'unet':
+        model = UNet(
+            base_filters=params['base_filters']
+        )
     else:
-        print(f"Model {model} is not supported yet")
+        print(f"Model {use_model} is not supported yet")
         exit()
     
 
     if nn_config['load_weights']:
-        print('Loading weight for:', model)
+        print('Loading weight for:', use_model)
         try:
             load_weights(model, nn_config['weights_path'])
         except Exception:
             print("Failed to load weights. Probably due to a change in nn in the config")
             exit()
     else:
-        print('Creating a new model:', model)
+        print('Creating a new model:', use_model)
     
     model.to(device)
     return model

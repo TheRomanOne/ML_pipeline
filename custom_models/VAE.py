@@ -46,10 +46,10 @@ class VAE(nn.Module):
     def __init__(self, params, input_shape):
         super(VAE, self).__init__()
 
-        with open('custom_models/sequence_config/encoder.yaml', 'r') as yaml_file:
+        with open('custom_models/backbone_configs/encoder.yaml', 'r') as yaml_file:
             encoder_architecture = yaml.safe_load(yaml_file)
 
-        with open('custom_models/sequence_config/decoder.yaml', 'r') as yaml_file:
+        with open('custom_models/backbone_configs/decoder.yaml', 'r') as yaml_file:
             decoder_architecture = yaml.safe_load(yaml_file)
 
         self.encoder = Encoder(latent_dim=params['latent_dim'], input_shape=input_shape, architecture=encoder_architecture)

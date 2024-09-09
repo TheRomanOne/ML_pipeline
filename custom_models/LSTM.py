@@ -8,7 +8,7 @@ class LSTMText(nn.Module):
 
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
         
-        with open('custom_models/sequence_config/lstm.yaml', 'r') as yaml_file:
+        with open('custom_models/backbone_configs/lstm.yaml', 'r') as yaml_file:
             lstm_architecture = yaml.safe_load(yaml_file)
 
         lstm_architecture['layers'][0]['params']['input_size'] = embedding_dim

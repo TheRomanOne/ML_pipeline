@@ -13,7 +13,7 @@ class TextDataset(Dataset):
     def _load_text(self):
         with open(self.text_path, 'r') as file:
             text = file.read()
-        dataset, word_to_index, index_to_word, dictionary = parse_text(text)
+        dataset, word_to_index, index_to_word, vocabulary = parse_text(text)
         sequences, labels = get_sequential_data(dataset, self.seq_length)
 
         X = np.array([[word_to_index[word] for word in seq] for seq in sequences])
@@ -23,7 +23,7 @@ class TextDataset(Dataset):
         self.datase = dataset
         self.word_to_index = word_to_index
         self.index_to_word = index_to_word
-        self.dictionary = dictionary
+        self.vocabulary = vocabulary
         
         self.X_gt = torch.tensor(X, dtype=torch.long)
         self.y_gt = torch.tensor(y, dtype=torch.long)

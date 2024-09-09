@@ -1,6 +1,6 @@
 import torch
 import utils.vision_utils as i_utils
-from utils.train import train_model
+from train.train import train_model
 from utils.utils import print_model_params
 from utils.text_utils import generate_text
 from utils.session_utils import load_model_from_params
@@ -34,13 +34,11 @@ def process_sequential_session(session):
 
     dataset, dataloader = load_dataset(session)
 
-    # Create test sequence
-    if session_type == 'text':
-      test_sequence_text, test_sequence = get_text_intro(word_to_index=dataset.word_to_index)
-      test_sequence.to(device)
+    # # Create test sequence
+    # if session_type == 'text':
     
-    elif session_type == 'timeseries':
-      test_sequence = get_numeric_intro(dataset)
+    # elif session_type == 'timeseries':
+    #   test_sequence = get_numeric_intro(dataset)
 
 
 
@@ -53,11 +51,11 @@ def process_sequential_session(session):
 
 # __________________________________ Train model __________________________________ 
 
-    losses, sequences = train_model(
+    losses, _ = train_model(
       dataloader=dataloader,
       model=seq_model,
-      test_sample=test_sequence,
-      config=training_config
+      config=training_config,
+      # test_sample=test_sequence,
     )
     i_utils.plot_losses(losses, training_config['n_epochs'], save_path=f'{session_path}/images')
 
@@ -68,19 +66,23 @@ def process_sequential_session(session):
 # __________________________________ Post process __________________________________ 
 
 
-    # Sample model
-    if session_type == 'text':
-      learning_text = []
-      for s in sequences:
-        _, predicted = torch.max(torch.tensor(s).unsqueeze(0), dim=1)
-        next_word = dataset.index_to_word[predicted.item()]
-        learning_text.append(next_word)
-      
-      print('Creating learning sequence')
-      with open(f"{session_path}/text/learning_sequence.txt", "w") as file:
-        file.write(' '.join(learning_text))
+    if len(session['post_process']) == 0:
+      print('No post processing was requested')
+      exit()
 
-      generated_text = generate_text(seq_model, test_sequence_text, dataset.word_to_index, dataset.index_to_word, max_length=300)
+    # Sample model
+    if 'generate_text' in session['post_process']:
+      print("Generating text")
+      # learning_text = []
+      # for s in sequences:
+      #   _, predicted = torch.max(torch.tensor(s).unsqueeze(0), dim=1)
+      #   next_word = dataset.index_to_word[predicted.item()]
+      #   learning_text.append(next_word)
+      
+      test_sequence_text, test_sequence = get_text_intro(word_to_index=dataset.word_to_index)
+      test_sequence.to(device)
+
+      generated_text = generate_text(seq_model, test_sequence_text, dataset.word_to_index, dataset.index_to_word, max_length=1000)
       with open(f"{session_path}/text/generated_text.txt", "w") as file:
         file.write(generated_text)
 
@@ -88,9 +90,7 @@ def process_sequential_session(session):
       pass
 
 
-    if len(session['post_process']) == 0:
-      print('No post processing was requested')
-      exit()    
+        
     
     
     

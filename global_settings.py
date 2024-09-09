@@ -7,5 +7,5 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('\n\nDevice:', device, '\n\n')
 
 if str(device) != 'cuda':
-  print("Cuda was unable to start. Since training on a CPU is a terrible idea, the process will now terminate.\nPlease consider restarting the computer ")
+  print("Cuda was unable to start. Please consider restarting the computer ")
   exit()

@@ -24,7 +24,7 @@ def load_text(text_path, batch_size, seq_length):
     text_dataset = TextDataset(text_path, seq_length)
     dataloader = DataLoader(text_dataset, batch_size=batch_size, shuffle=True)
     print('Text dataset length', len(text_dataset))
-    print('Dictionary length', len(text_dataset.dictionary))
+    print('Vocabulary length', len(text_dataset.vocabulary))
 
     return text_dataset, dataloader
 

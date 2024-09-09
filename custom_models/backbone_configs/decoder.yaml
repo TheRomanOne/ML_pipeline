@@ -1,6 +1,8 @@
 # ______________   LAYER 1  ______________
 
 layers:
+
+# ______________   LAYER 1  ______________
   - function: deconv2d
     params: 
       in_channels: -1 # take size from config
@@ -13,10 +15,12 @@ layers:
     params: 
       size: 64
 
-  - function: leakyrelu
-    params: 
-      negative_slope: 0.2
+  - function: silu
+    params: []
 
+
+
+# ______________   LAYER 2  ______________
   - function: deconv2d
     params: 
       in_channels: 64
@@ -29,10 +33,12 @@ layers:
     params: 
       size: 32
 
-  - function: leakyrelu
-    params: 
-      negative_slope: 0.2
+  - function: silu
+    params: []
 
+
+
+# ______________   LAYER 3  ______________
   - function: conv2d
     params: 
       in_channels: 32
@@ -40,3 +46,7 @@ layers:
       kernel_size: 2
       stride: 1
       padding: 0
+
+  - function: tanh
+    params: []
+

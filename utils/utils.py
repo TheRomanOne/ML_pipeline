@@ -56,6 +56,7 @@ def evaluate_model_batches(model, images, batches=16):
   
   return np.vstack(result)
 
+      
 def conv2d_output_shape(input_shape, kernel_size, stride, padding):
     # Calculate output height and width
     return (np.array(input_shape) - kernel_size + 2 * padding) // stride + 1
