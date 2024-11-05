@@ -5,7 +5,8 @@ from utils.loss_functions import vae_loss
 import torch
 from global_settings import device
 import torch.nn as nn
-from custom_models.UNet import forward_diffusion
+from custom_models.Diffusion import forward_diffusion
+import torch.nn.functional as F
 
 def train_diffusion(dataloader, model, n_epochs, lr, test_image=None) -> tuple:
   print("\n\nTraining type: Diffusion")
@@ -17,7 +18,8 @@ def train_diffusion(dataloader, model, n_epochs, lr, test_image=None) -> tuple:
   pbar = tqdm(range(n_epochs))
   
   model.train()
-  loss_f = nn.MSELoss()
+  loss_f = nn.L1Loss()
+  
   
   for epoch in pbar:
     for X, y in dataloader:
@@ -25,15 +27,10 @@ def train_diffusion(dataloader, model, n_epochs, lr, test_image=None) -> tuple:
       y = y.to(device)
       
       # Forward diffusion
-      t = torch.rand(x.size(0), 1, 1, 1).to(device) * np.deg2rad(180)
-      noisy_x = forward_diffusion(x, t, model.num_base_filters)
-
-
-      # TODO: add positional encoding
-      recon_batch = model(noisy_x)
-
-      # Compute loss (reconstruct original images)
-      loss = loss_f(recon_batch, y)
+      t = torch.randint(0, 10, (x.shape[0],), device=device).long()
+      noisy_x, noise, _, _ = forward_diffusion(x, t, device)
+      noise_pred = model(noisy_x, t)
+      loss = loss_f(noise, noise_pred)
 
 
       opt.zero_grad()
@@ -46,10 +43,12 @@ def train_diffusion(dataloader, model, n_epochs, lr, test_image=None) -> tuple:
       l = loss.item()
       losses.append(l)
 
-      det = recon_batch.detach()
+      # det = recon_batch.detach()
       if test_image is not None:
         with torch.no_grad():
-            det = model(test_image.unsqueeze(0))
+          noisy_test, _, _, _ = forward_diffusion(x, t, device)
+          test_noise_pred = model(noisy_x, t)
+          det = (test_noise_pred - noisy_test)
         det = det.detach()
         det = det.cpu()
         det = det.squeeze().numpy()
@@ -59,7 +58,7 @@ def train_diffusion(dataloader, model, n_epochs, lr, test_image=None) -> tuple:
     torch.cuda.empty_cache()
   
   model.eval()
-
+  frames = np.vstack(frames)
   return np.array(losses), frames
 
 

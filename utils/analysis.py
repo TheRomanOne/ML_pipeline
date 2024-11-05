@@ -9,7 +9,7 @@ from pandas.plotting import scatter_matrix
 from sklearn.manifold import Isomap, LocallyLinearEmbedding
 from sklearn.manifold import TSNE
 from global_settings import device
-from custom_models.UNet import forward_diffusion
+from custom_models.Diffusion import forward_diffusion, get_index_from_list, get_gaussian_noise
 
 def run_pca(latents_np, save_path):
   print('\t --- pca')
@@ -147,15 +147,60 @@ def eval_and_interp(model, X_gt, y_gt, to_horizontal, session_path):
   )
 
 
-# Testing the model on noisy images
+@torch.no_grad()
+def sample_timestep(x, model, betas, sqrt_one_minus_alphas_cumprod, posterior_variance, sqrt_recip_alphas):
+    
+    t = torch.full((1,), 10, device=device, dtype=torch.long)
+    betas_t = get_index_from_list(betas, t, x.shape)
+    sqrt_one_minus_alphas_cumprod_t = get_index_from_list(
+        sqrt_one_minus_alphas_cumprod, t, x.shape
+    )
+    sqrt_recip_alphas_t = get_index_from_list(sqrt_recip_alphas, t, x.shape)
+    
+    # Call model (current image - noise prediction)
+    model_mean = sqrt_recip_alphas_t * (
+        x - betas_t * model(x.squeeze(), t) / sqrt_one_minus_alphas_cumprod_t
+    )
+    posterior_variance_t = get_index_from_list(posterior_variance, t, x.shape)
+    
+    if t == 0:
+        # As pointed out by Luis Pereira (see YouTube comment)
+        # The t's are offset from the t's in the paper
+        return model_mean
+    else:
+        noise = torch.randn_like(x)
+        return model_mean + torch.sqrt(posterior_variance_t) * noise 
+
+@torch.no_grad()
+# def sample_plot_image(img_size, t, model, betas, sqrt_one_minus_alphas_cumprod, posterior_variance, sqrt_recip_alphas):
+def sample_plot_image(img_size, save_path):
+    # Sample noise
+    img = torch.randn((1, img_size[0], *img_size), device=device)
+    plt.figure(figsize=(15,15))
+    plt.axis('off')
+    num_images = 10
+    stepsize = int(30/num_images)
+
+    for i in range(0,30)[::-1]:
+        
+        # betas, sqrt_recip_alphas, _, sqrt_one_minus_alphas_cumprod, posterior_variance = get_gaussian_noise()
+        # img = sample_timestep(img, model, betas, sqrt_one_minus_alphas_cumprod, posterior_variance, sqrt_recip_alphas)
+        # Edit: This is to maintain the natural range of the distribution
+        img = torch.clamp(img, -1.0, 1.0)
+        if i % stepsize == 0:
+            plt.subplot(1, num_images, int(i/stepsize)+1)
+            i_utils.render_image(img.detach().cpu(), save_path)
+
+
 def test_diffusion(model, images, save_path):
+  
   model.eval()
   with torch.no_grad():
     images = images.to(device)
 
     # Add noise
     t = torch.rand(images.size(0), 1, 1, 1).to(device) * np.deg2rad(180)
-    noisy_images = forward_diffusion(images, t, model.num_base_filters)
+    noisy_images, _, sqrt_recip_alphas, posterior_variance = forward_diffusion(images, t)
 
     denoised = []
 

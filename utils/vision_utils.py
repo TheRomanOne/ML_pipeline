@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 from torchvision.transforms import Resize
 from PIL import Image
 import global_settings as gs
+from custom_models.Diffusion import sample_timestep
 
 device = gs.device
 
@@ -246,3 +247,23 @@ def plot_losses(losses, n_epochs, save_path):
   plt.ylabel('Mean Loss')
   plt.savefig(f'{save_path}/loss_plot.png', bbox_inches='tight', dpi=300)
   plt.close()
+
+
+@torch.no_grad()
+def sample_plot_image(img_size, save_path):
+  # Sample noise
+  img = torch.randn((1, 3, img_size, img_size), device=device)
+  plt.figure(figsize=(15,15))
+  plt.axis('off')
+  num_images = 10
+  stepsize = int(T/num_images)
+
+  for i in range(0,T)[::-1]:
+      t = torch.full((1,), i, device=device, dtype=torch.long)
+      img = sample_timestep(img, t)
+      # Edit: This is to maintain the natural range of the distribution
+      img = torch.clamp(img, -1.0, 1.0)
+      if i % stepsize == 0:
+          plt.subplot(1, num_images, int(i/stepsize)+1)
+          render_image(img.detach().cpu(), f'{save_path}/loss_plot.png')
+  plt.show()         

@@ -1,5 +1,8 @@
 import torch
-import torch.nn.functional as F
+# from custom_models.Diffusion import forward_diffusion_sample
+# from global_settings import device
+
+
 
 def vae_loss(recon_x, x, mu, logvar, betha):
     # Reconstruction loss (MSE)

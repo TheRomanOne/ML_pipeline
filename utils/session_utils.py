@@ -4,7 +4,7 @@ from custom_models.VAE import VAE
 from custom_models.VAE_SR import VAE_SR
 from custom_models.VAE_SR_landscape import VAE_SR_landscape
 from custom_models.LSTM import LSTMText, LSTMTimeSeq
-from custom_models.UNet import UNet
+from custom_models.Diffusion import Diffusion
 import time
 import global_settings as gs
 
@@ -126,8 +126,8 @@ def load_model_from_params(nn_config):
             n_stacked_layers=params['n_layers']
         )
     elif use_model == 'unet':
-        model = UNet(
-            base_filters=params['base_filters']
+        model = Diffusion(
+            # base_filters=params['base_filters']
         )
     else:
         print(f"Model {use_model} is not supported yet")

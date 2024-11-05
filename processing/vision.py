@@ -1,6 +1,6 @@
 import torch
 from train.train import train_model
-from utils.analysis import run_full_analysis, eval_and_interp, test_diffusion
+from utils.analysis import run_full_analysis, eval_and_interp, sample_plot_image
 from utils.utils import evaluate_latent_batches, print_model_params
 from utils.session_utils import load_model_from_params
 import utils.vision_utils as i_utils
@@ -81,4 +81,5 @@ def process_vision_session(session):
       run_full_analysis(latents_np, save_path=f'{session_path}/images')
     
     if 'test_diffusion' in session['post_process']:
-       test_diffusion(model, X_gt, save_path=f'{session_path}/images')
+      sample_plot_image(X_gt[0].shape, save_path=f'{session_path}/images')
+          # model, X_gt, save_path=f'{session_path}/images')

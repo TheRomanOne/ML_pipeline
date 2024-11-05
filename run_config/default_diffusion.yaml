@@ -1,11 +1,11 @@
-session_name: 'diffusion_snowboard'
+session_name: 'diffusion_dogs'
 
 dataset:
-  type: 'video'
-  name: 'snowboard'
+  type: 'image'
+  name: 'dogs'
   is_horizontal: false
   resize_ratio: 1 # keep at 1
-  batch_size: 8
+  batch_size: 16
 
 nn:
   use_model: 'unet'
@@ -16,7 +16,7 @@ nn:
 
 training:
   method: 'diffusion'
-  n_epochs: 15
+  n_epochs: 1
   learning_rate: .5*1e-3
 
 post_process:
